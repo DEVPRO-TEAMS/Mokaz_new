@@ -1,0 +1,19 @@
+// Source - https://stackoverflow.com/q
+// Posted by Alexnl, modified by community. See post 'Timeline' for change history
+// Retrieved 2026-01-11, License - CC BY-SA 3.0
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews
+    </IfModule>
+
+    RewriteEngine On
+
+    # Redirect Trailing Slashes...
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Handle Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
