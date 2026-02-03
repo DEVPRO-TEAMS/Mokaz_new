@@ -7,6 +7,8 @@
 /vendor
 .env
 .env.backup
+.htaccess
+composer.lock
 .env.production
 Homestead.json
 Homestead.yaml
