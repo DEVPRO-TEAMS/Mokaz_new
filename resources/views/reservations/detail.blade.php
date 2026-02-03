@@ -2054,8 +2054,8 @@
                         
                         // Si le temps semble irréaliste (trop court pour vélo/marche), on corrige
                         if (mode === 'walking') {
-                            // Temps minimal réaliste pour la marche : ~15 min/km
-                            const realisticWalkMinutes = Math.round(distanceMeters / 1000 * 15);
+                            // Temps minimal réaliste pour la marche : ~20 min/km
+                            const realisticWalkMinutes = Math.round(distanceMeters / 1000 * 20);
                             if (durationMinutes < realisticWalkMinutes * 0.5) {
                                 // Si le temps OSRM est moins de la moitié du temps réaliste
                                 adjustedMinutes = realisticWalkMinutes;
@@ -2063,8 +2063,8 @@
                                 console.log(`Correction marche: ${durationMinutes}min → ${adjustedMinutes}min`);
                             }
                         } else if (mode === 'bicycling') {
-                            // Temps minimal réaliste pour le vélo : ~4 min/km
-                            const realisticBikeMinutes = Math.round(distanceMeters / 1000 * 4);
+                            // Temps minimal réaliste pour le vélo : ~5 min/km
+                            const realisticBikeMinutes = Math.round(distanceMeters / 1000 * 5);
                             if (durationMinutes < realisticBikeMinutes * 0.5) {
                                 // Si le temps OSRM est moins de la moitié du temps réaliste
                                 adjustedMinutes = realisticBikeMinutes;
@@ -2072,8 +2072,8 @@
                                 console.log(`Correction vélo: ${durationMinutes}min → ${adjustedMinutes}min`);
                             }
                         } else if (mode === 'driving') {
-                            // Temps minimal réaliste pour la voiture : ~1.5 min/km
-                            const realisticCarMinutes = Math.round(distanceMeters / 1000 * 1.5);
+                            // Temps minimal réaliste pour la voiture : ~2 min/km
+                            const realisticCarMinutes = Math.round(distanceMeters / 1000 * 2);
                             if (durationMinutes < realisticCarMinutes * 0.5) {
                                 adjustedMinutes = Math.max(1, realisticCarMinutes);
                                 note = ' (estimation)';
@@ -2126,13 +2126,13 @@
                         // Temps réalistes basés sur la distance
                         switch(mode) {
                             case 'driving':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 1.5)); // ~1.5 min/km
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 2)); // ~2 min/km
                                 break;
                             case 'walking':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 15)); // ~15 min/km
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 20)); // ~20 min/km
                                 break;
                             case 'bicycling':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 4)); // ~4 min/km
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 5)); // ~5 min/km
                                 break;
                         }
                         
