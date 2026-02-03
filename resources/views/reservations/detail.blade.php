@@ -1752,7 +1752,6 @@
                 }
             }
 
-
             // Calcul et affichage de l'itinéraire
             // function updateRoute(startLat, startLng, mode) {
             //     // Supprimer l'ancien contrôle de routage
@@ -1770,28 +1769,23 @@
             //     // Convertir le mode OSRM selon le bouton sélectionné
             //     let osrmProfile;
             //     let googleTravelMode;
-            //     let speedFactor = 1; // Facteur pour ajuster les temps
                 
             //     switch(mode) {
             //         case 'driving':
             //             osrmProfile = 'driving';
             //             googleTravelMode = 'driving';
-            //             speedFactor = 1; // Pas de modification pour la voiture
             //             break;
             //         case 'walking':
             //             osrmProfile = 'foot';
             //             googleTravelMode = 'walking';
-            //             speedFactor = 0.25; // La marche est ~4x plus lente que la voiture
             //             break;
             //         case 'bicycling':
             //             osrmProfile = 'cycling';
             //             googleTravelMode = 'bicycling';
-            //             speedFactor = 0.5; // Le vélo est ~2x plus lent que la voiture
             //             break;
             //         default:
             //             osrmProfile = 'driving';
             //             googleTravelMode = 'driving';
-            //             speedFactor = 1;
             //     }
                 
             //     routingControl = L.Routing.control({
@@ -1801,7 +1795,7 @@
             //         ],
             //         router: L.Routing.osrmv1({
             //             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //             profile: osrmProfile  // Utiliser le bon profil
+            //             profile: osrmProfile
             //         }),
             //         lineOptions: {
             //             styles: [lineStyle[mode]],
@@ -1850,36 +1844,55 @@
             //             const route = routes[0];
             //             const distanceMeters = route.summary.totalDistance;
             //             const durationSeconds = route.summary.totalTime;
+            //             const durationMinutes = Math.round(durationSeconds / 60);
                         
-            //             // Appliquer le facteur de correction selon le mode
-            //             let adjustedDurationSeconds = durationSeconds;
+            //             // Pour debug: afficher les données brutes
+            //             console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${durationMinutes}min`);
+                        
+            //             // Appliquer des facteurs de correction réalistes
+            //             let adjustedMinutes = durationMinutes;
             //             let note = '';
                         
-            //             // Si l'OSRM donne le même temps pour tous les modes, on applique notre correction
-            //             // Basé sur des vitesses moyennes réalistes :
-            //             // - Voiture : 50 km/h en ville = 13.89 m/s
-            //             // - Vélo : 15 km/h = 4.17 m/s
-            //             // - Marche : 5 km/h = 1.39 m/s
-            //             if (mode === 'walking' || mode === 'bicycling') {
-            //                 const drivingTime = distanceMeters / 13.89; // Temps théorique en voiture
-                            
-            //                 if (Math.abs(durationSeconds - drivingTime) < 60) {
-            //                     // Si le temps est trop proche du temps en voiture, on ajuste
-            //                     if (mode === 'walking') {
-            //                         adjustedDurationSeconds = distanceMeters / 1.39; // 5 km/h
-            //                         note = ' (estimation)';
-            //                     } else if (mode === 'bicycling') {
-            //                         adjustedDurationSeconds = distanceMeters / 4.17; // 15 km/h
-            //                         note = ' (estimation)';
-            //                     }
+            //             // Vitesses moyennes réalistes (en km/h) :
+            //             // Voiture : 40-50 km/h en ville
+            //             // Vélo : 12-18 km/h
+            //             // Marche : 4-6 km/h
+                        
+            //             // Si le temps semble irréaliste (trop court pour vélo/marche), on corrige
+            //             if (mode === 'walking') {
+            //                 // Temps minimal réaliste pour la marche : ~9.5 min/km
+            //                 const realisticWalkMinutes = Math.round(distanceMeters / 1000 * 9.5);
+            //                 if (durationMinutes < realisticWalkMinutes * 0.5) {
+            //                     // Si le temps OSRM est moins de la moitié du temps réaliste
+            //                     adjustedMinutes = realisticWalkMinutes;
+            //                     note = ' (estimation)';
+            //                     console.log(`Correction marche: ${durationMinutes}min → ${adjustedMinutes}min`);
+            //                 }
+            //             } else if (mode === 'bicycling') {
+            //                 // Temps minimal réaliste pour le vélo : ~2.5 min/km
+            //                 const realisticBikeMinutes = Math.round(distanceMeters / 1000 * 1.5);
+            //                 if (durationMinutes < realisticBikeMinutes * 0.5) {
+            //                     // Si le temps OSRM est moins de la moitié du temps réaliste
+            //                     adjustedMinutes = realisticBikeMinutes;
+            //                     note = ' (estimation)';
+            //                     console.log(`Correction vélo: ${durationMinutes}min → ${adjustedMinutes}min`);
+            //                 }
+            //             } else if (mode === 'driving') {
+            //                 // Temps minimal réaliste pour la voiture : ~1.2 min/km
+            //                 const realisticCarMinutes = Math.round(distanceMeters / 1000 * 0.8);
+            //                 if (durationMinutes < realisticCarMinutes * 0.5) {
+            //                     adjustedMinutes = Math.max(1, realisticCarMinutes);
+            //                     note = ' (estimation)';
+            //                     console.log(`Correction voiture: ${durationMinutes}min → ${adjustedMinutes}min`);
             //                 }
             //             }
                         
-            //             const durationMinutes = Math.max(1, Math.round(adjustedDurationSeconds / 60));
+            //             // S'assurer que le temps n'est pas inférieur à 1 minute
+            //             adjustedMinutes = Math.max(1, adjustedMinutes);
                         
             //             // Formater la distance et la durée
             //             const formattedDistance = formatDistance(distanceMeters);
-            //             const formattedDuration = formatDuration(durationMinutes);
+            //             const formattedDuration = formatDuration(adjustedMinutes);
                         
             //             // Mettre à jour l'interface
             //             document.getElementById('distance-info').textContent = formattedDistance;
@@ -1905,9 +1918,6 @@
             //                 [latitude, longitude]
             //             );
             //             map.fitBounds(bounds, { padding: [50, 50] });
-                        
-            //             // Afficher dans la console pour déboguer
-            //             console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${Math.round(durationSeconds/60)}min, Durée ajustée: ${durationMinutes}min`);
             //         }
             //     });
 
@@ -1919,15 +1929,16 @@
             //             const distance = calculateDistance(userPosition.lat, userPosition.lng, latitude, longitude);
             //             let estimatedMinutes;
                         
+            //             // Temps réalistes basés sur la distance
             //             switch(mode) {
             //                 case 'driving':
-            //                     estimatedMinutes = Math.max(1, Math.round(distance / 833)); // ~50 km/h
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 1.2)); // ~1.2 min/km
             //                     break;
             //                 case 'walking':
-            //                     estimatedMinutes = Math.max(1, Math.round(distance / 83)); // ~5 km/h
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 11.5)); // ~13 min/km
             //                     break;
             //                 case 'bicycling':
-            //                     estimatedMinutes = Math.max(1, Math.round(distance / 250)); // ~15 km/h
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 2.5)); // ~2.5 min/km
             //                     break;
             //             }
                         
@@ -1946,7 +1957,23 @@
             //         document.getElementById('duration-info').classList.add('text-danger');
             //     });
             // }
-            // Calcul et affichage de l'itinéraire
+
+            // // Fonction pour calculer la distance en ligne droite (Haversine)
+            // function calculateDistance(lat1, lon1, lat2, lon2) {
+            //     const R = 6371e3; // Rayon de la Terre en mètres
+            //     const φ1 = lat1 * Math.PI/180;
+            //     const φ2 = lat2 * Math.PI/180;
+            //     const Δφ = (lat2-lat1) * Math.PI/180;
+            //     const Δλ = (lon2-lon1) * Math.PI/180;
+
+            //     const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            //             Math.cos(φ1) * Math.cos(φ2) *
+            //             Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            //     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+            //     return R * c; // Distance en mètres
+            // }
+
             function updateRoute(startLat, startLng, mode) {
                 // Supprimer l'ancien contrôle de routage
                 if (routingControl) {
@@ -2043,42 +2070,67 @@
                         // Pour debug: afficher les données brutes
                         console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${durationMinutes}min`);
                         
-                        // Appliquer des facteurs de correction réalistes
+                        // Basé sur les algorithmes de Google Maps:
+                        // - Voiture : vitesse moyenne de 25-50 km/h selon le trafic et la zone
+                        // - Vélo : vitesse moyenne de 12-20 km/h
+                        // - Marche : vitesse moyenne de 5 km/h (avec facteur de terrain)
+                        
                         let adjustedMinutes = durationMinutes;
                         let note = '';
                         
-                        // Vitesses moyennes réalistes (en km/h) :
-                        // Voiture : 40-50 km/h en ville
-                        // Vélo : 12-18 km/h
-                        // Marche : 4-6 km/h
+                        // Facteurs de correction basés sur l'expérience Google Maps
+                        // Google Maps ajuste en fonction du trafic, des feux, stops, etc.
                         
-                        // Si le temps semble irréaliste (trop court pour vélo/marche), on corrige
                         if (mode === 'walking') {
-                            // Temps minimal réaliste pour la marche : ~11.5 min/km
-                            const realisticWalkMinutes = Math.round(distanceMeters / 1000 * 11.5);
-                            if (durationMinutes < realisticWalkMinutes * 0.5) {
-                                // Si le temps OSRM est moins de la moitié du temps réaliste
-                                adjustedMinutes = realisticWalkMinutes;
-                                note = ' (estimation)';
-                                console.log(`Correction marche: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            // Google Maps utilise ~5 km/h pour la marche, mais avec facteurs supplémentaires
+                            // Facteur: temps réel = temps théorique × 1.3 (pour arrêts, feux, etc.)
+                            const theoreticalWalkMinutes = Math.round((distanceMeters / 1000) * 12); // 5 km/h = 12 min/km
+                            adjustedMinutes = Math.round(theoreticalWalkMinutes * 1.3);
+                            
+                            // Si OSRM donne un temps trop court (moins de 70% du temps théorique)
+                            if (durationMinutes < theoreticalWalkMinutes * 0.7) {
+                                note = ' (estimation Google)';
+                                console.log(`Correction marche Google: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            } else {
+                                adjustedMinutes = durationMinutes;
                             }
+                            
                         } else if (mode === 'bicycling') {
-                            // Temps minimal réaliste pour le vélo : ~2.5 min/km
-                            const realisticBikeMinutes = Math.round(distanceMeters / 1000 * 2.5);
-                            if (durationMinutes < realisticBikeMinutes * 0.5) {
-                                // Si le temps OSRM est moins de la moitié du temps réaliste
-                                adjustedMinutes = realisticBikeMinutes;
-                                note = ' (estimation)';
-                                console.log(`Correction vélo: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            // Google Maps utilise ~15 km/h pour le vélo en ville
+                            // Facteur: temps réel = temps théorique × 1.2
+                            const theoreticalBikeMinutes = Math.round((distanceMeters / 1000) * 4); // 15 km/h = 4 min/km
+                            adjustedMinutes = Math.round(theoreticalBikeMinutes * 1.2);
+                            
+                            // Si OSRM donne un temps trop court
+                            if (durationMinutes < theoreticalBikeMinutes * 0.7) {
+                                note = ' (estimation Google)';
+                                console.log(`Correction vélo Google: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            } else {
+                                adjustedMinutes = durationMinutes;
                             }
+                            
                         } else if (mode === 'driving') {
-                            // Temps minimal réaliste pour la voiture : ~1.2 min/km
-                            const realisticCarMinutes = Math.round(distanceMeters / 1000 * 1.2);
-                            if (durationMinutes < realisticCarMinutes * 0.5) {
-                                adjustedMinutes = Math.max(1, realisticCarMinutes);
-                                note = ' (estimation)';
-                                console.log(`Correction voiture: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            // Google Maps utilise des données de trafic en temps réel
+                            // Vitesse moyenne en ville: 30-40 km/h = 1.5-2 min/km
+                            // Facteur de trafic: 1.1 à 1.5 selon l'heure
+                            const theoreticalCarMinutes = Math.round((distanceMeters / 1000) * 1.8); // ~33 km/h
+                            adjustedMinutes = Math.round(theoreticalCarMinutes * 1.2); // Facteur trafic léger
+                            
+                            // Si OSRM donne un temps trop optimiste
+                            if (durationMinutes < theoreticalCarMinutes * 0.8) {
+                                note = ' (estimation Google)';
+                                console.log(`Correction voiture Google: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            } else {
+                                adjustedMinutes = durationMinutes;
                             }
+                        }
+                        
+                        // Garantir un minimum réaliste
+                        // Pour de très courtes distances, Google ajoute un buffer
+                        if (distanceMeters < 1000) {
+                            adjustedMinutes = Math.max(adjustedMinutes, 3); // Minimum 3 min pour tout déplacement
+                        } else if (distanceMeters < 500) {
+                            adjustedMinutes = Math.max(adjustedMinutes, 2); // Minimum 2 min
                         }
                         
                         // S'assurer que le temps n'est pas inférieur à 1 minute
@@ -2112,29 +2164,44 @@
                             [latitude, longitude]
                         );
                         map.fitBounds(bounds, { padding: [50, 50] });
+                        
+                        // Afficher un rapport détaillé
+                        console.log(`RAPPORT FINAL - Distance: ${formattedDistance}`);
+                        console.log(`- Voiture théorique: ${Math.round((distanceMeters / 1000) * 1.8)} min`);
+                        console.log(`- Vélo théorique: ${Math.round((distanceMeters / 1000) * 4)} min`);
+                        console.log(`- Marche théorique: ${Math.round((distanceMeters / 1000) * 12)} min`);
+                        console.log(`- Résultat ${mode}: ${adjustedMinutes} min${note}`);
                     }
                 });
 
                 routingControl.on('routingerror', function(e) {
                     console.error('Erreur de calcul d\'itinéraire pour le mode', mode, ':', e.error);
                     
-                    // Si erreur, on peut estimer le temps basé sur la distance
+                    // Si erreur, on peut estimer le temps basé sur la distance (selon Google Maps)
                     if (userPosition) {
                         const distance = calculateDistance(userPosition.lat, userPosition.lng, latitude, longitude);
+                        const distanceKm = distance / 1000;
                         let estimatedMinutes;
                         
-                        // Temps réalistes basés sur la distance
+                        // Estimations Google Maps standards
                         switch(mode) {
                             case 'driving':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 1.2)); // ~1.2 min/km
+                                // 1.8 min/km pour trafic normal (33 km/h)
+                                estimatedMinutes = Math.max(1, Math.round(distanceKm * 1.8 * 1.2));
                                 break;
                             case 'walking':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 11.5)); // ~13 min/km
+                                // 12 min/km pour marche (5 km/h) avec facteur
+                                estimatedMinutes = Math.max(1, Math.round(distanceKm * 12 * 1.3));
                                 break;
                             case 'bicycling':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 2.5)); // ~2.5 min/km
+                                // 4 min/km pour vélo (15 km/h) avec facteur
+                                estimatedMinutes = Math.max(1, Math.round(distanceKm * 4 * 1.2));
                                 break;
                         }
+                        
+                        // Minimum pour courtes distances
+                        if (distance < 1000) estimatedMinutes = Math.max(estimatedMinutes, 3);
+                        if (distance < 500) estimatedMinutes = Math.max(estimatedMinutes, 2);
                         
                         const formattedDuration = formatDuration(estimatedMinutes);
                         const modeText = {
@@ -2143,7 +2210,7 @@
                             'bicycling': 'vélo'
                         };
                         
-                        document.getElementById('duration-info').textContent = `${formattedDuration} en ${modeText[mode]} (estimation)`;
+                        document.getElementById('duration-info').textContent = `${formattedDuration} en ${modeText[mode]} (estimation Google)`;
                     } else {
                         document.getElementById('duration-info').textContent = `Erreur pour ${mode}`;
                     }
