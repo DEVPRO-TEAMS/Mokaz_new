@@ -9,6 +9,7 @@
 .env.backup
 .htaccess
 composer.lock
+composer.json
 .env.production
 Homestead.json
 Homestead.yaml
