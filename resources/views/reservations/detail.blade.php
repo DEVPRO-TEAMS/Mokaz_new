@@ -221,7 +221,7 @@
             </div>
 
             <!-- Section carte interactive -->
-            <div class="modern-card mt-4">
+            {{-- <div class="modern-card mt-4">
                 <div class="card-header-custom">
                     <h6 class="mb-0">
                         <i class="fas fa-map-marked-alt me-2"></i>Itinéraire vers le logement
@@ -284,7 +284,87 @@
                         </div>
                     </div>
                 </div>
+            </div> --}}
+            <!-- Section carte interactive -->
+<div class="modern-card mt-4">
+    <div class="card-header-custom">
+        <h6 class="mb-0">
+            <i class="fas fa-map-marked-alt me-2"></i>Itinéraire vers le logement
+        </h6>
+        <div class="transport-mode-selector">
+            <button class="btn-transport active" data-mode="driving">
+                <i class="fas fa-car"></i> Voiture
+            </button>
+            <button class="btn-transport" data-mode="walking">
+                <i class="fas fa-walking"></i> À pied
+            </button>
+            <button class="btn-transport" data-mode="bicycling">
+                <i class="fas fa-bicycle"></i> Vélo
+            </button>
+        </div>
+    </div>
+    <div class="card-body-custom">
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="map-location-property-intinerary" class="map-container" 
+                     style="height: 400px; border-radius: 10px; overflow: hidden;"></div>
             </div>
+            <div class="col-lg-4">
+                <div class="itinerary-info">
+                    <h6 class="mb-3">Informations d'itinéraire</h6>
+                    
+                    <div class="info-item mb-3">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">Adresse</small>
+                            <p class="mb-0 fw-bold">{{ $reservation->property->address }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <div class="info-icon">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">Distance</small>
+                            <p class="mb-0 fw-bold" id="distance-info">Calcul en cours...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">Temps estimé</small>
+                            <p class="mb-0 fw-bold" id="duration-info">Calcul en cours...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item mb-3">
+                        <div class="info-icon">
+                            <i class="fas fa-shoe-prints"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">À pied (alternatif)</small>
+                            <p class="mb-0 fw-bold" id="walking-info">Calcul en cours...</p>
+                        </div>
+                    </div>
+                    
+                    <a id="googleMapsBtn" target="_blank" class="btn-navigate">
+                        <i class="fab fa-google me-2"></i>Ouvrir dans Google Maps
+                    </a>
+                    
+                    <button id="recenterBtn" class="btn-navigate mt-2" style="background: #6c757d;">
+                        <i class="fas fa-crosshairs me-2"></i>Recentrer sur ma position
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </section>
 
@@ -996,7 +1076,7 @@
         });
     </script>
 
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function () {
 
             const latitude = @json($reservation->property->latitude ?? 0);
@@ -1125,6 +1205,742 @@
             });
 
         });
+    </script> --}}
+
+    {{-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const latitude = @json($reservation->property->latitude ?? 0);
+            const longitude = @json($reservation->property->longitude ?? 0);
+            const propertyAddress = @json($reservation->property->address ?? '');
+            
+            let currentMapMode = 'driving';
+            let map, propertyMarker, userMarker, routingControl;
+            let userPosition = null;
+
+            // Fonds de carte améliorés
+            const baseMaps = {
+                "Standard": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19
+                }),
+                "Topographie": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+                    maxZoom: 17
+                }),
+                "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                })
+            };
+
+            // Initialisation de la carte
+            function initializeMap() {
+                if (!latitude || !longitude) {
+                    console.error('Coordonnées de la propriété non disponibles');
+                    return;
+                }
+
+                map = L.map('map-location-property-intinerary', {
+                    center: [latitude, longitude],
+                    zoom: 15,
+                    layers: [baseMaps["Standard"]]
+                });
+
+                // Ajout du contrôle des couches
+                L.control.layers(baseMaps).addTo(map);
+
+                // Icône personnalisée pour la propriété
+                const propertyIcon = L.divIcon({
+                    className: 'property-marker',
+                    html: `<div style="
+                        width: 50px;
+                        height: 50px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-size: 20px;
+                    ">🏠</div>`,
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 50]
+                });
+
+                // Marqueur de la propriété
+                propertyMarker = L.marker([latitude, longitude], {
+                    icon: propertyIcon,
+                    zIndexOffset: 1000
+                }).addTo(map)
+                .bindPopup(`<b>${propertyAddress}</b>`)
+                .openPopup();
+
+                // Ajout d'un cercle de rayon
+                L.circle([latitude, longitude], {
+                    color: '#667eea',
+                    fillColor: '#667eea',
+                    fillOpacity: 0.1,
+                    radius: 500
+                }).addTo(map);
+
+                // Initialisation du suivi de position
+                initGeolocation();
+            }
+
+            // Initialisation de la géolocalisation
+            function initGeolocation() {
+                if (!navigator.geolocation) {
+                    alert('La géolocalisation n\'est pas supportée par votre navigateur');
+                    return;
+                }
+
+                // Suivi continu de la position
+                navigator.geolocation.watchPosition(
+                    position => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        userPosition = { lat: userLat, lng: userLng };
+                        
+                        updateUserMarker(userLat, userLng);
+                        updateRoute(userLat, userLng, currentMapMode);
+                        updateWalkingInfo(userLat, userLng);
+                    },
+                    error => {
+                        console.error('Erreur de géolocalisation:', error);
+                        document.getElementById('distance-info').textContent = 'GPS non disponible';
+                        document.getElementById('duration-info').textContent = 'Activez la localisation';
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 30000,
+                        timeout: 27000
+                    }
+                );
+            }
+
+            // Mise à jour du marqueur utilisateur
+            function updateUserMarker(lat, lng) {
+                const userIcon = L.divIcon({
+                    className: 'user-location-marker',
+                    html: `<div style="
+                        width: 30px;
+                        height: 30px;
+                        background: radial-gradient(circle, #28a745 40%, #155724 70%);
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 0 10px rgba(40, 167, 69, 0.8);
+                        animation: pulse 1.5s infinite;
+                    "></div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                if (!userMarker) {
+                    userMarker = L.marker([lat, lng], { icon: userIcon })
+                        .addTo(map)
+                        .bindPopup('📍 Votre position actuelle');
+                } else {
+                    userMarker.setLatLng([lat, lng]);
+                }
+            }
+
+            // Calcul et affichage de l'itinéraire
+            function updateRoute(startLat, startLng, mode) {
+                // Supprimer l'ancien contrôle de routage
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+
+                // Configurer le style de la route selon le mode
+                const lineStyle = {
+                    driving: { color: '#667eea', weight: 5, opacity: 0.8 },
+                    walking: { color: '#28a745', weight: 4, opacity: 0.8, dashArray: '5, 10' },
+                    bicycling: { color: '#fd7e14', weight: 4, opacity: 0.8, dashArray: '8, 8' }
+                };
+
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(startLat, startLng),
+                        L.latLng(latitude, longitude)
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1',
+                        profile: mode // 'driving', 'walking', or 'cycling'
+                    }),
+                    lineOptions: {
+                        styles: [lineStyle[mode]],
+                        extendToWaypoints: false,
+                        missingRouteTolerance: 0
+                    },
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    show: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: 'smart'
+                }).addTo(map);
+
+                // Mettre à jour les informations lors de la découverte de l'itinéraire
+                routingControl.on('routesfound', function(e) {
+                    const routes = e.routes;
+                    if (routes && routes.length > 0) {
+                        const route = routes[0];
+                        const distanceKm = (route.summary.totalDistance / 1000).toFixed(2);
+                        const durationMin = Math.round(route.summary.totalTime / 60);
+                        
+                        // Mettre à jour l'interface
+                        document.getElementById('distance-info').textContent = `${distanceKm} km`;
+                        
+                        const modeText = {
+                            'driving': 'voiture',
+                            'walking': 'marche',
+                            'bicycling': 'vélo'
+                        };
+                        
+                        document.getElementById('duration-info').textContent = 
+                            `${durationMin} min en ${modeText[mode]}`;
+                        
+                        // Mettre à jour le lien Google Maps
+                        const travelMode = mode === 'bicycling' ? 'bicycling' : mode;
+                        document.getElementById('googleMapsBtn').href = 
+                            `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${travelMode}`;
+                    }
+                });
+
+                routingControl.on('routingerror', function(e) {
+                    console.error('Erreur de calcul d\'itinéraire:', e.error);
+                    document.getElementById('duration-info').textContent = 'Erreur de calcul';
+                });
+            }
+
+            // Calcul spécifique pour la marche
+            function updateWalkingInfo(startLat, startLng) {
+                const walkingRouter = L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1',
+                    profile: 'foot'
+                });
+
+                walkingRouter.route([
+                    L.latLng(startLat, startLng),
+                    L.latLng(latitude, longitude)
+                ], function(err, routes) {
+                    if (!err && routes && routes.length > 0) {
+                        const route = routes[0];
+                        const walkingDistanceKm = (route.summary.totalDistance / 1000).toFixed(2);
+                        const walkingDurationMin = Math.round(route.summary.totalTime / 60);
+                        
+                        document.getElementById('walking-info').textContent = 
+                            `${walkingDurationMin} min (${walkingDistanceKm} km)`;
+                    }
+                });
+            }
+
+            // Gestionnaire pour les boutons de mode de transport
+            document.querySelectorAll('.btn-transport').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMapMode = this.dataset.mode;
+                    
+                    if (userPosition) {
+                        updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
+                    }
+                });
+            });
+
+            // Bouton recentrer
+            document.getElementById('recenterBtn').addEventListener('click', function() {
+                if (userPosition) {
+                    map.setView([userPosition.lat, userPosition.lng], 15);
+                    userMarker.openPopup();
+                } else if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        map.setView([position.coords.latitude, position.coords.longitude], 15);
+                    });
+                }
+            });
+
+            // Ajouter le CSS pour l'animation du marqueur
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    0% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.1); opacity: 0.8; }
+                    100% { transform: scale(1); opacity: 1; }
+                }
+                .user-location-marker {
+                    animation: pulse 1.5s infinite;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Initialiser la carte
+            initializeMap();
+        });
+    </script> --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const latitude = parseFloat(@json($reservation->property->latitude ?? 0));
+            const longitude = parseFloat(@json($reservation->property->longitude ?? 0));
+            const propertyAddress = @json($reservation->property->address ?? '');
+            
+            let currentMapMode = 'driving';
+            let map, propertyMarker, userMarker, routingControl;
+            let userPosition = null;
+            let isMapInitialized = false;
+
+            // Vérifier si les coordonnées sont valides
+            if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+                console.error('Coordonnées de la propriété invalides');
+                document.getElementById('map-location-property-intinerary').innerHTML = 
+                    '<div class="alert alert-warning p-4 text-center">Coordonnées GPS non disponibles pour cette propriété</div>';
+                return;
+            }
+
+            // Fonds de carte améliorés
+            const baseMaps = {
+                "Standard": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19
+                }),
+                "Topographie": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+                    maxZoom: 17
+                }),
+                "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                    maxZoom: 19
+                })
+            };
+
+            // Initialisation de la carte
+            function initializeMap() {
+                try {
+                    map = L.map('map-location-property-intinerary', {
+                        center: [latitude, longitude],
+                        zoom: 15,
+                        layers: [baseMaps["Standard"]],
+                        zoomControl: true,
+                        scrollWheelZoom: true
+                    });
+
+                    // Ajout du contrôle des couches
+                    L.control.layers(baseMaps).addTo(map);
+
+                    // Icône personnalisée pour la propriété
+                    const propertyIcon = L.divIcon({
+                        className: 'property-marker',
+                        html: `<div style="
+                            width: 50px;
+                            height: 50px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 0 15px rgba(102, 126, 234, 0.8);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 20px;
+                        ">🏠</div>`,
+                        iconSize: [50, 50],
+                        iconAnchor: [25, 50],
+                        popupAnchor: [0, -50]
+                    });
+
+                    // Marqueur de la propriété
+                    propertyMarker = L.marker([latitude, longitude], {
+                        icon: propertyIcon,
+                        zIndexOffset: 1000
+                    }).addTo(map)
+                    .bindPopup(`<div class="p-2"><b>${propertyAddress}</b><br><small>Destination</small></div>`)
+                    .openPopup();
+
+                    // Ajout d'un cercle de rayon pour visualisation
+                    L.circle([latitude, longitude], {
+                        color: '#667eea',
+                        fillColor: '#667eea',
+                        fillOpacity: 0.1,
+                        radius: 500,
+                        weight: 1
+                    }).addTo(map);
+
+                    isMapInitialized = true;
+                    
+                    // Initialisation du suivi de position
+                    setTimeout(initGeolocation, 500); // Petit délai pour laisser la carte s'initialiser
+                    
+                } catch (error) {
+                    console.error('Erreur lors de l\'initialisation de la carte:', error);
+                    document.getElementById('map-location-property-intinerary').innerHTML = 
+                        '<div class="alert alert-danger p-4 text-center">Erreur lors du chargement de la carte</div>';
+                }
+            }
+
+            // Initialisation de la géolocalisation
+            function initGeolocation() {
+                if (!navigator.geolocation) {
+                    showGeolocationError('La géolocalisation n\'est pas supportée par votre navigateur');
+                    return;
+                }
+
+                // D'abord, essayer d'obtenir la position actuelle
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        userPosition = { lat: userLat, lng: userLng };
+                        
+                        updateUserMarker(userLat, userLng);
+                        updateRoute(userLat, userLng, currentMapMode);
+                        updateWalkingInfo(userLat, userLng);
+                        
+                        // Puis démarrer le suivi continu
+                        startGeolocationWatch();
+                    },
+                    error => {
+                        handleGeolocationError(error);
+                        // Essayer quand même de démarrer le suivi
+                        startGeolocationWatch();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            }
+
+            function startGeolocationWatch() {
+                navigator.geolocation.watchPosition(
+                    position => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        
+                        // Vérifier si la position a significativement changé
+                        if (!userPosition || 
+                            Math.abs(userPosition.lat - userLat) > 0.0001 || 
+                            Math.abs(userPosition.lng - userLng) > 0.0001) {
+                            
+                            userPosition = { lat: userLat, lng: userLng };
+                            updateUserMarker(userLat, userLng);
+                            updateRoute(userLat, userLng, currentMapMode);
+                            updateWalkingInfo(userLat, userLng);
+                        }
+                    },
+                    error => {
+                        // Ne pas alerter pour les erreurs de suivi, seulement pour l'initialisation
+                        console.warn('Erreur de suivi GPS:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        maximumAge: 30000,
+                        timeout: 27000
+                    }
+                );
+            }
+
+            function handleGeolocationError(error) {
+                let message = 'Impossible d\'obtenir votre position';
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message = 'Autorisation de localisation refusée. Activez la géolocalisation dans les paramètres de votre navigateur.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message = 'Position indisponible. Vérifiez votre connexion ou votre GPS.';
+                        break;
+                    case error.TIMEOUT:
+                        message = 'La requête de localisation a expiré.';
+                        break;
+                }
+                
+                showGeolocationError(message);
+            }
+
+            function showGeolocationError(message) {
+                document.getElementById('distance-info').textContent = 'GPS non disponible';
+                document.getElementById('duration-info').textContent = 'Activez la localisation';
+                document.getElementById('walking-info').textContent = 'Non disponible';
+                
+                // Afficher un message sur la carte
+                if (map) {
+                    L.control.alert({
+                        position: 'topright',
+                        content: `<div class="alert alert-warning p-2"><small>${message}</small></div>`,
+                        autoClose: 10000
+                    }).addTo(map);
+                }
+            }
+
+            // Mise à jour du marqueur utilisateur
+            function updateUserMarker(lat, lng) {
+                const userIcon = L.divIcon({
+                    className: 'user-location-marker',
+                    html: `<div style="
+                        width: 30px;
+                        height: 30px;
+                        background: radial-gradient(circle, #28a745 40%, #155724 70%);
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 0 10px rgba(40, 167, 69, 0.8);
+                    "></div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    popupAnchor: [0, -15]
+                });
+
+                if (!userMarker) {
+                    userMarker = L.marker([lat, lng], { 
+                        icon: userIcon,
+                        zIndexOffset: 500 
+                    })
+                    .addTo(map)
+                    .bindPopup('<div class="p-2"><b>Votre position actuelle</b><br><small>Point de départ</small></div>');
+                } else {
+                    userMarker.setLatLng([lat, lng]);
+                }
+            }
+
+            // Calcul et affichage de l'itinéraire
+            function updateRoute(startLat, startLng, mode) {
+                // Supprimer l'ancien contrôle de routage
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
+
+                // Configurer le style de la route selon le mode
+                const lineStyle = {
+                    driving: { color: '#667eea', weight: 5, opacity: 0.8 },
+                    walking: { color: '#28a745', weight: 4, opacity: 0.8, dashArray: '5, 10' },
+                    bicycling: { color: '#fd7e14', weight: 4, opacity: 0.8, dashArray: '8, 8' }
+                };
+
+                // Convertir le mode OSRM (cycling au lieu de bicycling)
+                const osrmMode = mode === 'bicycling' ? 'cycling' : mode;
+                
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(startLat, startLng),
+                        L.latLng(latitude, longitude)
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1',
+                        profile: osrmMode
+                    }),
+                    lineOptions: {
+                        styles: [lineStyle[mode]],
+                        extendToWaypoints: true,
+                        missingRouteTolerance: 10
+                    },
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    show: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    createMarker: function() { return null; } // Désactiver les marqueurs automatiques
+                }).addTo(map);
+
+                // Mettre à jour les informations lors de la découverte de l'itinéraire
+                routingControl.on('routesfound', function(e) {
+                    const routes = e.routes;
+                    if (routes && routes.length > 0) {
+                        const route = routes[0];
+                        const distanceKm = (route.summary.totalDistance / 1000).toFixed(2);
+                        const durationMin = Math.round(route.summary.totalTime / 60);
+                        
+                        // Mettre à jour l'interface
+                        document.getElementById('distance-info').textContent = `${distanceKm} km`;
+                        document.getElementById('distance-info').classList.remove('text-danger');
+                        
+                        const modeText = {
+                            'driving': 'voiture',
+                            'walking': 'marche',
+                            'bicycling': 'vélo'
+                        };
+                        
+                        const durationText = `${durationMin} min en ${modeText[mode]}`;
+                        document.getElementById('duration-info').textContent = durationText;
+                        document.getElementById('duration-info').classList.remove('text-danger');
+                        
+                        // Mettre à jour le lien Google Maps
+                        const travelMode = mode === 'bicycling' ? 'bicycling' : mode;
+                        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${travelMode}`;
+                        document.getElementById('googleMapsBtn').href = googleMapsUrl;
+                        
+                        // Ajuster la vue pour voir les deux points
+                        const bounds = L.latLngBounds(
+                            [startLat, startLng],
+                            [latitude, longitude]
+                        );
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                });
+
+                routingControl.on('routingerror', function(e) {
+                    console.error('Erreur de calcul d\'itinéraire:', e.error);
+                    document.getElementById('duration-info').textContent = 'Erreur de calcul';
+                    document.getElementById('duration-info').classList.add('text-danger');
+                });
+            }
+
+            // Calcul spécifique pour la marche (alternative)
+            function updateWalkingInfo(startLat, startLng) {
+                // Utiliser le service OSRM pour les piétons
+                const walkingRouter = L.Routing.osrmv1({
+                    serviceUrl: 'https://router.project-osrm.org/route/v1',
+                    profile: 'foot'
+                });
+
+                walkingRouter.route([
+                    L.latLng(startLat, startLng),
+                    L.latLng(latitude, longitude)
+                ], function(err, routes) {
+                    if (!err && routes && routes.length > 0) {
+                        const route = routes[0];
+                        const walkingDistanceKm = (route.summary.totalDistance / 1000).toFixed(2);
+                        const walkingDurationMin = Math.round(route.summary.totalTime / 60);
+                        
+                        document.getElementById('walking-info').textContent = 
+                            `${walkingDurationMin} min (${walkingDistanceKm} km)`;
+                        document.getElementById('walking-info').classList.remove('text-danger');
+                    } else {
+                        document.getElementById('walking-info').textContent = 'Non disponible';
+                        document.getElementById('walking-info').classList.add('text-danger');
+                    }
+                });
+            }
+
+            // Gestionnaire pour les boutons de mode de transport
+            document.querySelectorAll('.btn-transport').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMapMode = this.dataset.mode;
+                    
+                    // Mettre à jour l'icône active
+                    const icon = this.querySelector('i');
+                    const allIcons = document.querySelectorAll('.btn-transport i');
+                    allIcons.forEach(i => i.style.opacity = '0.7');
+                    icon.style.opacity = '1';
+                    
+                    if (userPosition) {
+                        updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
+                    }
+                });
+            });
+
+            // Bouton recentrer
+            document.getElementById('recenterBtn').addEventListener('click', function() {
+                if (userPosition) {
+                    map.setView([userPosition.lat, userPosition.lng], 15);
+                    if (userMarker) userMarker.openPopup();
+                } else if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        map.setView([lat, lng], 15);
+                        updateUserMarker(lat, lng);
+                    }, () => {
+                        alert('Impossible d\'obtenir votre position actuelle');
+                    });
+                }
+            });
+
+            // Extension pour les alertes Leaflet (si non disponible)
+            if (!L.control.alert) {
+                L.Control.Alert = L.Control.extend({
+                    options: {
+                        position: 'topright'
+                    },
+                    
+                    onAdd: function(map) {
+                        this._container = L.DomUtil.create('div', 'leaflet-control-alert');
+                        L.DomEvent.disableClickPropagation(this._container);
+                        this._container.innerHTML = this.options.content;
+                        
+                        if (this.options.autoClose) {
+                            setTimeout(() => {
+                                this.remove();
+                            }, this.options.autoClose);
+                        }
+                        
+                        return this._container;
+                    },
+                    
+                    remove: function() {
+                        if (this._container && this._container.parentNode) {
+                            this._container.parentNode.removeChild(this._container);
+                        }
+                    }
+                });
+                
+                L.control.alert = function(options) {
+                    return new L.Control.Alert(options);
+                };
+            }
+
+            // Initialiser la carte
+            initializeMap();
+            
+            // Redimensionner la carte quand la fenêtre change de taille
+            window.addEventListener('resize', function() {
+                if (map) {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 100);
+                }
+            });
+        });
     </script>
+
+<!-- CSS additionnel minimal -->
+<style>
+.leaflet-control-alert {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.leaflet-control-alert .alert {
+    max-width: 300px;
+    margin: 10px;
+}
+
+.btn-transport i {
+    transition: opacity 0.3s;
+}
+
+.btn-transport.active i {
+    opacity: 1 !important;
+}
+
+.btn-transport:not(.active) i {
+    opacity: 0.7;
+}
+
+/* .map-container {
+    min-height: 400px;
+} */
+
+/* Animation pour le marqueur utilisateur */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.user-location-marker div {
+    animation: pulse 2s infinite;
+}
+
+/* Pour les petits écrans */
+/* @media (max-width: 992px) {
+    .map-container {
+        height: 350px !important;
+        margin-bottom: 20px;
+    }
+} */
+</style>
 
 @endsection

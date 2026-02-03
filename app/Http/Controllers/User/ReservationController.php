@@ -314,7 +314,8 @@ class ReservationController extends Controller
     public function myReservation(Request $request)
     {
         $paiement = Paiement::where('reservation_code', $request->code)->first();
-        if (!$paiement) {
+        $reservation = Reservation::where('code', $request->code)->first();
+        if (!$paiement && !$reservation) {
             return response()->json([
                 'type' => 'error',
                 'code' => 404,
@@ -322,7 +323,7 @@ class ReservationController extends Controller
                 'urlback' => '',
             ]);
         }
-        $reservation = Reservation::where('code', $request->code)->first();
+        // $reservation = Reservation::where('code', $request->code)->first();
         return response()->json([
             'type' => 'success',
             'message' => 'Réservation trouvée. Redirection en cours...',
