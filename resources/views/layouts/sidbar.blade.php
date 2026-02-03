@@ -2,7 +2,7 @@
     <header class="main-header fixed-header header-dashboard">
         <!-- Header Lower -->
         @php
-            $reservations = App\Models\Reservation::all();
+            $reservations = App\Models\Reservation::whereHas('paiement')->get();
             $comments = App\Models\Comment::all();
         @endphp
         <div class="header-lower">
@@ -174,7 +174,7 @@
                             href="{{ route('partner.reservation.index') }}">
                                 <i class="bi bi-calendar-check me-3 fs-5"></i>
                                 <span>Réservations</span>
-                                <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->whereHas('paiement')->where('partner_uuid', Auth::user()->partner_uuid)->count() ?? 0 }}</span>
+                                <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->where('partner_uuid', Auth::user()->partner_uuid)->count() ?? 0 }}</span>
                             </a>
                         </li>
                         @else
@@ -183,7 +183,7 @@
                                 href="{{ route('admin.reservation.index') }}">
                                     <i class="bi bi-calendar-check me-3 fs-5"></i>
                                     <span>Réservations</span>
-                                    <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->whereHas('paiement')->count() }}</span>
+                                    <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->count() }}</span>
                                 </a>
                             </li>
                         @endif
