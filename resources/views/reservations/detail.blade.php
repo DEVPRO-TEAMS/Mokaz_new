@@ -1752,556 +1752,6 @@
                 }
             }
 
-            // // Calcul et affichage de l'itinéraire
-            // function updateRoute(startLat, startLng, mode) {
-            //     // Supprimer l'ancien contrôle de routage
-            //     if (routingControl) {
-            //         map.removeControl(routingControl);
-            //     }
-
-            //     // Configurer le style de la route selon le mode
-            //     const lineStyle = {
-            //         driving: { color: '#002fff', weight: 6, opacity: 0.8 },
-            //         walking: { color: '#ff0008', weight: 6, opacity: 0.8, dashArray: '5, 10' },
-            //         bicycling: { color: '#ff4d00', weight: 6, opacity: 0.8, dashArray: '8, 8' }
-            //     };
-                
-
-            //     // Convertir le mode OSRM (cycling au lieu de bicycling)
-            //     const osrmMode = mode === 'bicycling' ? 'cycling' : mode;
-                
-            //     routingControl = L.Routing.control({
-            //         waypoints: [
-            //             L.latLng(startLat, startLng),
-            //             L.latLng(latitude, longitude)
-            //         ],
-            //         router: L.Routing.osrmv1({
-            //             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //             profile: osrmMode
-            //         }),
-            //         lineOptions: {
-            //             styles: [lineStyle[mode]],
-            //             extendToWaypoints: true,
-            //             missingRouteTolerance: 10
-            //         },
-            //         routeWhileDragging: false,
-            //         showAlternatives: false,
-            //         show: false,
-            //         addWaypoints: false,
-            //         fitSelectedRoutes: true,
-            //         createMarker: function() { return null; } // Désactiver les marqueurs automatiques
-            //     }).addTo(map);
-
-            //     // Mettre à jour les informations lors de la découverte de l'itinéraire
-            //     routingControl.on('routesfound', function(e) {
-            //         const routes = e.routes;
-            //         if (routes && routes.length > 0) {
-            //             const route = routes[0];
-            //             const distanceKm = (route.summary.totalDistance / 1000).toFixed(2);
-
-            //             const durationMin = Math.round(route.summary.totalTime / 60);
-                        
-            //             // Mettre à jour l'interface
-            //             document.getElementById('distance-info').textContent = `${distanceKm} km`;
-            //             document.getElementById('distance-info').classList.remove('text-danger');
-                        
-            //             const modeText = {
-            //                 'driving': 'voiture',
-            //                 'walking': 'marche',
-            //                 'bicycling': 'vélo'
-            //             };
-                        
-            //             const durationText = `${durationMin} min en ${modeText[mode]}`;
-            //             document.getElementById('duration-info').textContent = durationText;
-            //             document.getElementById('duration-info').classList.remove('text-danger');
-                        
-            //             // Mettre à jour le lien Google Maps
-            //             const travelMode = mode === 'bicycling' ? 'bicycling' : mode;
-            //             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${travelMode}`;
-            //             document.getElementById('googleMapsBtn').href = googleMapsUrl;
-                        
-            //             // Ajuster la vue pour voir les deux points
-            //             const bounds = L.latLngBounds(
-            //                 [startLat, startLng],
-            //                 [latitude, longitude]
-            //             );
-            //             map.fitBounds(bounds, { padding: [50, 50] });
-            //         }
-            //     });
-
-            //     routingControl.on('routingerror', function(e) {
-            //         console.error('Erreur de calcul d\'itinéraire:', e.error);
-            //         document.getElementById('duration-info').textContent = 'Erreur de calcul';
-            //         document.getElementById('duration-info').classList.add('text-danger');
-            //     });
-            // }
-
-            // // Calcul spécifique pour la marche (alternative)
-            // function updateWalkingInfo(startLat, startLng) {
-            //     // Utiliser le service OSRM pour les piétons
-            //     const walkingRouter = L.Routing.osrmv1({
-            //         serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //         profile: 'foot'
-            //     });
-
-            //     walkingRouter.route([
-            //         L.latLng(startLat, startLng),
-            //         L.latLng(latitude, longitude)
-            //     ], function(err, routes) {
-            //         if (!err && routes && routes.length > 0) {
-            //             const route = routes[0];
-            //             const walkingDistanceKm = (route.summary.totalDistance / 1000).toFixed(2);
-            //             const walkingDurationMin = Math.round(route.summary.totalTime / 60);
-                        
-            //             document.getElementById('walking-info').textContent = 
-            //                 `${walkingDurationMin} min (${walkingDistanceKm} km)`;
-            //             document.getElementById('walking-info').classList.remove('text-danger');
-            //         } else {
-            //             document.getElementById('walking-info').textContent = 'Non disponible';
-            //             document.getElementById('walking-info').classList.add('text-danger');
-            //         }
-            //     });
-            // }
-
-            // // Gestionnaire pour les boutons de mode de transport
-            // document.querySelectorAll('.btn-transport').forEach(btn => {
-            //     btn.addEventListener('click', function() {
-            //         document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-            //         this.classList.add('active');
-            //         currentMapMode = this.dataset.mode;
-                    
-            //         // Mettre à jour l'icône active
-            //         const icon = this.querySelector('i');
-            //         const allIcons = document.querySelectorAll('.btn-transport i');
-            //         allIcons.forEach(i => i.style.opacity = '0.7');
-            //         icon.style.opacity = '1';
-                    
-            //         if (userPosition) {
-            //             updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
-            //         }
-            //     });
-            // });
-
-            // Calcul et affichage de l'itinéraire
-            // function updateRoute(startLat, startLng, mode) {
-            //     // Supprimer l'ancien contrôle de routage
-            //     if (routingControl) {
-            //         map.removeControl(routingControl);
-            //     }
-
-            //     // Configurer le style de la route selon le mode
-            //     const lineStyle = {
-            //         driving: { color: '#002fff', weight: 6, opacity: 0.8 },
-            //         walking: { color: '#ff0008', weight: 6, opacity: 0.8, dashArray: '5, 10' },
-            //         bicycling: { color: '#ff4d00', weight: 6, opacity: 0.8, dashArray: '8, 8' }
-            //     };
-
-            //     // Convertir le mode OSRM (cycling au lieu de bicycling)
-            //     const osrmMode = mode === 'bicycling' ? 'cycling' : mode;
-                
-            //     routingControl = L.Routing.control({
-            //         waypoints: [
-            //             L.latLng(startLat, startLng),
-            //             L.latLng(latitude, longitude)
-            //         ],
-            //         router: L.Routing.osrmv1({
-            //             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //             profile: osrmMode
-            //         }),
-            //         lineOptions: {
-            //             styles: [lineStyle[mode]],
-            //             extendToWaypoints: true,
-            //             missingRouteTolerance: 10
-            //         },
-            //         routeWhileDragging: false,
-            //         showAlternatives: false,
-            //         show: false,
-            //         addWaypoints: false,
-            //         fitSelectedRoutes: true,
-            //         createMarker: function() { return null; } // Désactiver les marqueurs automatiques
-            //     }).addTo(map);
-
-            //     // Fonctions utilitaires pour formater le temps et la distance
-            //     function formatDuration(minutes) {
-            //         if (minutes >= 60) {
-            //             const hours = Math.floor(minutes / 60);
-            //             const remainingMinutes = minutes % 60;
-            //             if (remainingMinutes === 0) {
-            //                 return `${hours}h`;
-            //             }
-            //             return `${hours}h${remainingMinutes}min`;
-            //         }
-            //         return `${minutes}min`;
-            //     }
-
-            //     function formatDistance(meters) {
-            //         if (meters >= 1000) {
-            //             const km = (meters / 1000).toFixed(2);
-            //             // Retirer les décimales inutiles
-            //             if (km.endsWith('.00')) {
-            //                 return `${parseInt(km)} km`;
-            //             } else if (km.endsWith('0')) {
-            //                 return `${parseFloat(km).toFixed(1)} km`;
-            //             }
-            //             return `${km} km`;
-            //         }
-            //         return `${Math.round(meters)} m`;
-            //     }
-
-            //     // Mettre à jour les informations lors de la découverte de l'itinéraire
-            //     routingControl.on('routesfound', function(e) {
-            //         const routes = e.routes;
-            //         if (routes && routes.length > 0) {
-            //             const route = routes[0];
-            //             const distanceMeters = route.summary.totalDistance;
-            //             const durationSeconds = route.summary.totalTime;
-            //             const durationMinutes = Math.round(durationSeconds / 60);
-                        
-            //             // Formater la distance et la durée
-            //             const formattedDistance = formatDistance(distanceMeters);
-            //             const formattedDuration = formatDuration(durationMinutes);
-                        
-            //             // Mettre à jour l'interface
-            //             document.getElementById('distance-info').textContent = formattedDistance;
-            //             document.getElementById('distance-info').classList.remove('text-danger');
-                        
-            //             const modeText = {
-            //                 'driving': 'voiture',
-            //                 'walking': 'marche',
-            //                 'bicycling': 'vélo'
-            //             };
-                        
-            //             const durationText = `${formattedDuration} en ${modeText[mode]}`;
-            //             document.getElementById('duration-info').textContent = durationText;
-            //             document.getElementById('duration-info').classList.remove('text-danger');
-                        
-            //             // Mettre à jour le lien Google Maps
-            //             const travelMode = mode === 'bicycling' ? 'bicycling' : mode;
-            //             const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${travelMode}`;
-            //             document.getElementById('googleMapsBtn').href = googleMapsUrl;
-                        
-            //             // Ajuster la vue pour voir les deux points
-            //             const bounds = L.latLngBounds(
-            //                 [startLat, startLng],
-            //                 [latitude, longitude]
-            //             );
-            //             map.fitBounds(bounds, { padding: [50, 50] });
-            //         }
-            //     });
-
-            //     routingControl.on('routingerror', function(e) {
-            //         console.error('Erreur de calcul d\'itinéraire:', e.error);
-            //         document.getElementById('duration-info').textContent = 'Erreur de calcul';
-            //         document.getElementById('duration-info').classList.add('text-danger');
-            //     });
-            // }
-
-            // // Calcul spécifique pour la marche (alternative)
-            // function updateWalkingInfo(startLat, startLng) {
-            //     // Utiliser le service OSRM pour les piétons
-            //     const walkingRouter = L.Routing.osrmv1({
-            //         serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //         profile: 'foot'
-            //     });
-
-            //     // Fonctions utilitaires
-            //     function formatDuration(minutes) {
-            //         if (minutes >= 60) {
-            //             const hours = Math.floor(minutes / 60);
-            //             const remainingMinutes = minutes % 60;
-            //             if (remainingMinutes === 0) {
-            //                 return `${hours}h`;
-            //             }
-            //             return `${hours}h${remainingMinutes}min`;
-            //         }
-            //         return `${minutes}min`;
-            //     }
-
-            //             function formatDistance(meters) {
-            //                 if (meters >= 1000) {
-            //                     const km = (meters / 1000).toFixed(2);
-            //                     if (km.endsWith('.00')) {
-            //                         return `${parseInt(km)} km`;
-            //                     } else if (km.endsWith('0')) {
-            //                         return `${parseFloat(km).toFixed(1)} km`;
-            //                     }
-            //                     return `${km} km`;
-            //                 }
-            //                 return `${Math.round(meters)} m`;
-            //             }
-
-            //             walkingRouter.route([
-            //                 L.latLng(startLat, startLng),
-            //                 L.latLng(latitude, longitude)
-            //             ], function(err, routes) {
-            //                 if (!err && routes && routes.length > 0) {
-            //                     const route = routes[0];
-            //                     const walkingDistanceMeters = route.summary.totalDistance;
-            //                     const walkingDurationSeconds = route.summary.totalTime;
-            //                     const walkingDurationMinutes = Math.round(walkingDurationSeconds / 60);
-                                
-            //                     // Formater la distance et la durée
-            //                     const formattedDistance = formatDistance(walkingDistanceMeters);
-            //                     const formattedDuration = formatDuration(walkingDurationMinutes);
-                                
-            //                     document.getElementById('walking-info').textContent = 
-            //                         `${formattedDuration} (${formattedDistance})`;
-            //                     document.getElementById('walking-info').classList.remove('text-danger');
-            //                 } else {
-            //                     document.getElementById('walking-info').textContent = 'Non disponible';
-            //                     document.getElementById('walking-info').classList.add('text-danger');
-            //                 }
-            //             });
-            // }
-
-            // // Gestionnaire pour les boutons de mode de transport
-            // document.querySelectorAll('.btn-transport').forEach(btn => {
-            //     btn.addEventListener('click', function() {
-            //         document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-            //         this.classList.add('active');
-            //         currentMapMode = this.dataset.mode;
-                    
-            //         // Mettre à jour l'icône active
-            //         const icon = this.querySelector('i');
-            //         const allIcons = document.querySelectorAll('.btn-transport i');
-            //         allIcons.forEach(i => i.style.opacity = '0.7');
-            //         icon.style.opacity = '1';
-                    
-            //         if (userPosition) {
-            //             updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
-            //         }
-            //     });
-            // });
-
-            // Calcul et affichage de l'itinéraire
-            function updateRoute(startLat, startLng, mode) {
-                // Supprimer l'ancien contrôle de routage
-                if (routingControl) {
-                    map.removeControl(routingControl);
-                }
-
-                // Configurer le style de la route selon le mode
-                const lineStyle = {
-                    driving: { color: '#002fff', weight: 6, opacity: 0.8 },
-                    walking: { color: '#ff0008', weight: 6, opacity: 0.8, dashArray: '5, 10' },
-                    bicycling: { color: '#ff4d00', weight: 6, opacity: 0.8, dashArray: '8, 8' }
-                };
-
-                // Convertir le mode OSRM selon le bouton sélectionné
-                let osrmProfile;
-                let googleTravelMode;
-                let speedFactor = 1; // Facteur pour ajuster les temps
-                
-                switch(mode) {
-                    case 'driving':
-                        osrmProfile = 'driving';
-                        googleTravelMode = 'driving';
-                        speedFactor = 1; // Pas de modification pour la voiture
-                        break;
-                    case 'walking':
-                        osrmProfile = 'foot';
-                        googleTravelMode = 'walking';
-                        speedFactor = 0.25; // La marche est ~4x plus lente que la voiture
-                        break;
-                    case 'bicycling':
-                        osrmProfile = 'cycling';
-                        googleTravelMode = 'bicycling';
-                        speedFactor = 0.5; // Le vélo est ~2x plus lent que la voiture
-                        break;
-                    default:
-                        osrmProfile = 'driving';
-                        googleTravelMode = 'driving';
-                        speedFactor = 1;
-                }
-                
-                routingControl = L.Routing.control({
-                    waypoints: [
-                        L.latLng(startLat, startLng),
-                        L.latLng(latitude, longitude)
-                    ],
-                    router: L.Routing.osrmv1({
-                        serviceUrl: 'https://router.project-osrm.org/route/v1',
-                        profile: osrmProfile  // Utiliser le bon profil
-                    }),
-                    lineOptions: {
-                        styles: [lineStyle[mode]],
-                        extendToWaypoints: true,
-                        missingRouteTolerance: 10
-                    },
-                    routeWhileDragging: false,
-                    showAlternatives: false,
-                    show: false,
-                    addWaypoints: false,
-                    fitSelectedRoutes: true,
-                    createMarker: function() { return null; }
-                }).addTo(map);
-
-                // Fonctions utilitaires pour formater le temps et la distance
-                function formatDuration(minutes) {
-                    if (minutes >= 60) {
-                        const hours = Math.floor(minutes / 60);
-                        const remainingMinutes = minutes % 60;
-                        if (remainingMinutes === 0) {
-                            return `${hours}h`;
-                        }
-                        return `${hours}h${remainingMinutes}min`;
-                    }
-                    return `${minutes}min`;
-                }
-
-                function formatDistance(meters) {
-                    if (meters >= 1000) {
-                        const km = (meters / 1000).toFixed(2);
-                        // Retirer les décimales inutiles
-                        if (km.endsWith('.00')) {
-                            return `${parseInt(km)} km`;
-                        } else if (km.endsWith('0')) {
-                            return `${parseFloat(km).toFixed(1)} km`;
-                        }
-                        return `${km} km`;
-                    }
-                    return `${Math.round(meters)} m`;
-                }
-
-                // Mettre à jour les informations lors de la découverte de l'itinéraire
-                routingControl.on('routesfound', function(e) {
-                    const routes = e.routes;
-                    if (routes && routes.length > 0) {
-                        const route = routes[0];
-                        const distanceMeters = route.summary.totalDistance;
-                        const durationSeconds = route.summary.totalTime;
-                        
-                        // Appliquer le facteur de correction selon le mode
-                        let adjustedDurationSeconds = durationSeconds;
-                        let note = '';
-                        
-                        // Si l'OSRM donne le même temps pour tous les modes, on applique notre correction
-                        // Basé sur des vitesses moyennes réalistes :
-                        // - Voiture : 50 km/h en ville = 13.89 m/s
-                        // - Vélo : 15 km/h = 4.17 m/s
-                        // - Marche : 5 km/h = 1.39 m/s
-                        if (mode === 'walking' || mode === 'bicycling') {
-                            const drivingTime = distanceMeters / 13.89; // Temps théorique en voiture
-                            
-                            if (Math.abs(durationSeconds - drivingTime) < 60) {
-                                // Si le temps est trop proche du temps en voiture, on ajuste
-                                if (mode === 'walking') {
-                                    adjustedDurationSeconds = distanceMeters / 1.39; // 5 km/h
-                                    note = ' (estimation)';
-                                } else if (mode === 'bicycling') {
-                                    adjustedDurationSeconds = distanceMeters / 4.17; // 15 km/h
-                                    note = ' (estimation)';
-                                }
-                            }
-                        }
-                        
-                        const durationMinutes = Math.max(1, Math.round(adjustedDurationSeconds / 60));
-                        
-                        // Formater la distance et la durée
-                        const formattedDistance = formatDistance(distanceMeters);
-                        const formattedDuration = formatDuration(durationMinutes);
-                        
-                        // Mettre à jour l'interface
-                        document.getElementById('distance-info').textContent = formattedDistance;
-                        document.getElementById('distance-info').classList.remove('text-danger');
-                        
-                        const modeText = {
-                            'driving': 'voiture',
-                            'walking': 'marche',
-                            'bicycling': 'vélo'
-                        };
-                        
-                        const durationText = `${formattedDuration} en ${modeText[mode]}${note}`;
-                        document.getElementById('duration-info').textContent = durationText;
-                        document.getElementById('duration-info').classList.remove('text-danger');
-                        
-                        // Mettre à jour le lien Google Maps avec le bon mode
-                        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${googleTravelMode}`;
-                        document.getElementById('googleMapsBtn').href = googleMapsUrl;
-                        
-                        // Ajuster la vue pour voir les deux points
-                        const bounds = L.latLngBounds(
-                            [startLat, startLng],
-                            [latitude, longitude]
-                        );
-                        map.fitBounds(bounds, { padding: [50, 50] });
-                        
-                        // Afficher dans la console pour déboguer
-                        console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${Math.round(durationSeconds/60)}min, Durée ajustée: ${durationMinutes}min`);
-                    }
-                });
-
-                routingControl.on('routingerror', function(e) {
-                    console.error('Erreur de calcul d\'itinéraire pour le mode', mode, ':', e.error);
-                    
-                    // Si erreur, on peut estimer le temps basé sur la distance
-                    if (userPosition) {
-                        const distance = calculateDistance(userPosition.lat, userPosition.lng, latitude, longitude);
-                        let estimatedMinutes;
-                        
-                        switch(mode) {
-                            case 'driving':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 833)); // ~50 km/h
-                                break;
-                            case 'walking':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 83)); // ~5 km/h
-                                break;
-                            case 'bicycling':
-                                estimatedMinutes = Math.max(1, Math.round(distance / 250)); // ~15 km/h
-                                break;
-                        }
-                        
-                        const formattedDuration = formatDuration(estimatedMinutes);
-                        const modeText = {
-                            'driving': 'voiture',
-                            'walking': 'marche',
-                            'bicycling': 'vélo'
-                        };
-                        
-                        document.getElementById('duration-info').textContent = `${formattedDuration} en ${modeText[mode]} (estimation)`;
-                    } else {
-                        document.getElementById('duration-info').textContent = `Erreur pour ${mode}`;
-                    }
-                    
-                    document.getElementById('duration-info').classList.add('text-danger');
-                });
-            }
-
-            // Fonction pour calculer la distance en ligne droite (Haversine)
-            function calculateDistance(lat1, lon1, lat2, lon2) {
-                const R = 6371e3; // Rayon de la Terre en mètres
-                const φ1 = lat1 * Math.PI/180;
-                const φ2 = lat2 * Math.PI/180;
-                const Δφ = (lat2-lat1) * Math.PI/180;
-                const Δλ = (lon2-lon1) * Math.PI/180;
-
-                const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                        Math.cos(φ1) * Math.cos(φ2) *
-                        Math.sin(Δλ/2) * Math.sin(Δλ/2);
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-                return R * c; // Distance en mètres
-            }
-
-            // Gestionnaire pour les boutons de mode de transport
-            document.querySelectorAll('.btn-transport').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentMapMode = this.dataset.mode;
-                    
-                    // Mettre à jour l'icône active
-                    const icon = this.querySelector('i');
-                    const allIcons = document.querySelectorAll('.btn-transport i');
-                    allIcons.forEach(i => i.style.opacity = '0.7');
-                    icon.style.opacity = '1';
-                    
-                    if (userPosition) {
-                        // Mettre à jour l'itinéraire avec le mode sélectionné
-                        updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
-                    }
-                });
-            });
 
             // Calcul et affichage de l'itinéraire
             // function updateRoute(startLat, startLng, mode) {
@@ -2320,23 +1770,28 @@
             //     // Convertir le mode OSRM selon le bouton sélectionné
             //     let osrmProfile;
             //     let googleTravelMode;
+            //     let speedFactor = 1; // Facteur pour ajuster les temps
                 
             //     switch(mode) {
             //         case 'driving':
             //             osrmProfile = 'driving';
             //             googleTravelMode = 'driving';
+            //             speedFactor = 1; // Pas de modification pour la voiture
             //             break;
             //         case 'walking':
             //             osrmProfile = 'foot';
             //             googleTravelMode = 'walking';
+            //             speedFactor = 0.25; // La marche est ~4x plus lente que la voiture
             //             break;
             //         case 'bicycling':
             //             osrmProfile = 'cycling';
             //             googleTravelMode = 'bicycling';
+            //             speedFactor = 0.5; // Le vélo est ~2x plus lent que la voiture
             //             break;
             //         default:
             //             osrmProfile = 'driving';
             //             googleTravelMode = 'driving';
+            //             speedFactor = 1;
             //     }
                 
             //     routingControl = L.Routing.control({
@@ -2395,7 +1850,32 @@
             //             const route = routes[0];
             //             const distanceMeters = route.summary.totalDistance;
             //             const durationSeconds = route.summary.totalTime;
-            //             const durationMinutes = Math.round(durationSeconds / 60);
+                        
+            //             // Appliquer le facteur de correction selon le mode
+            //             let adjustedDurationSeconds = durationSeconds;
+            //             let note = '';
+                        
+            //             // Si l'OSRM donne le même temps pour tous les modes, on applique notre correction
+            //             // Basé sur des vitesses moyennes réalistes :
+            //             // - Voiture : 50 km/h en ville = 13.89 m/s
+            //             // - Vélo : 15 km/h = 4.17 m/s
+            //             // - Marche : 5 km/h = 1.39 m/s
+            //             if (mode === 'walking' || mode === 'bicycling') {
+            //                 const drivingTime = distanceMeters / 13.89; // Temps théorique en voiture
+                            
+            //                 if (Math.abs(durationSeconds - drivingTime) < 60) {
+            //                     // Si le temps est trop proche du temps en voiture, on ajuste
+            //                     if (mode === 'walking') {
+            //                         adjustedDurationSeconds = distanceMeters / 1.39; // 5 km/h
+            //                         note = ' (estimation)';
+            //                     } else if (mode === 'bicycling') {
+            //                         adjustedDurationSeconds = distanceMeters / 4.17; // 15 km/h
+            //                         note = ' (estimation)';
+            //                     }
+            //                 }
+            //             }
+                        
+            //             const durationMinutes = Math.max(1, Math.round(adjustedDurationSeconds / 60));
                         
             //             // Formater la distance et la durée
             //             const formattedDistance = formatDistance(distanceMeters);
@@ -2411,7 +1891,7 @@
             //                 'bicycling': 'vélo'
             //             };
                         
-            //             const durationText = `${formattedDuration} en ${modeText[mode]}`;
+            //             const durationText = `${formattedDuration} en ${modeText[mode]}${note}`;
             //             document.getElementById('duration-info').textContent = durationText;
             //             document.getElementById('duration-info').classList.remove('text-danger');
                         
@@ -2425,99 +1905,288 @@
             //                 [latitude, longitude]
             //             );
             //             map.fitBounds(bounds, { padding: [50, 50] });
+                        
+            //             // Afficher dans la console pour déboguer
+            //             console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${Math.round(durationSeconds/60)}min, Durée ajustée: ${durationMinutes}min`);
             //         }
             //     });
 
             //     routingControl.on('routingerror', function(e) {
             //         console.error('Erreur de calcul d\'itinéraire pour le mode', mode, ':', e.error);
-            //         document.getElementById('duration-info').textContent = `Erreur pour ${mode}`;
+                    
+            //         // Si erreur, on peut estimer le temps basé sur la distance
+            //         if (userPosition) {
+            //             const distance = calculateDistance(userPosition.lat, userPosition.lng, latitude, longitude);
+            //             let estimatedMinutes;
+                        
+            //             switch(mode) {
+            //                 case 'driving':
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 833)); // ~50 km/h
+            //                     break;
+            //                 case 'walking':
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 83)); // ~5 km/h
+            //                     break;
+            //                 case 'bicycling':
+            //                     estimatedMinutes = Math.max(1, Math.round(distance / 250)); // ~15 km/h
+            //                     break;
+            //             }
+                        
+            //             const formattedDuration = formatDuration(estimatedMinutes);
+            //             const modeText = {
+            //                 'driving': 'voiture',
+            //                 'walking': 'marche',
+            //                 'bicycling': 'vélo'
+            //             };
+                        
+            //             document.getElementById('duration-info').textContent = `${formattedDuration} en ${modeText[mode]} (estimation)`;
+            //         } else {
+            //             document.getElementById('duration-info').textContent = `Erreur pour ${mode}`;
+            //         }
+                    
             //         document.getElementById('duration-info').classList.add('text-danger');
             //     });
             // }
+            // Calcul et affichage de l'itinéraire
+            function updateRoute(startLat, startLng, mode) {
+                // Supprimer l'ancien contrôle de routage
+                if (routingControl) {
+                    map.removeControl(routingControl);
+                }
 
-            // Calcul spécifique pour la marche (alternative) - maintenant séparé du mode principal
-            // function updateWalkingInfo(startLat, startLng) {
-            //     // Cette fonction calcule TOUJOURS le temps à pied
-            //     const walkingRouter = L.Routing.osrmv1({
-            //         serviceUrl: 'https://router.project-osrm.org/route/v1',
-            //         profile: 'foot'  // Toujours pour les piétons
-            //     });
+                // Configurer le style de la route selon le mode
+                const lineStyle = {
+                    driving: { color: '#002fff', weight: 6, opacity: 0.8 },
+                    walking: { color: '#ff0008', weight: 6, opacity: 0.8, dashArray: '5, 10' },
+                    bicycling: { color: '#ff4d00', weight: 6, opacity: 0.8, dashArray: '8, 8' }
+                };
 
-            //     // Fonctions utilitaires
-            //     function formatDuration(minutes) {
-            //         if (minutes >= 60) {
-            //             const hours = Math.floor(minutes / 60);
-            //             const remainingMinutes = minutes % 60;
-            //             if (remainingMinutes === 0) {
-            //                 return `${hours}h`;
-            //             }
-            //             return `${hours}h${remainingMinutes}min`;
-            //         }
-            //         return `${minutes}min`;
-            //     }
+                // Convertir le mode OSRM selon le bouton sélectionné
+                let osrmProfile;
+                let googleTravelMode;
+                
+                switch(mode) {
+                    case 'driving':
+                        osrmProfile = 'driving';
+                        googleTravelMode = 'driving';
+                        break;
+                    case 'walking':
+                        osrmProfile = 'foot';
+                        googleTravelMode = 'walking';
+                        break;
+                    case 'bicycling':
+                        osrmProfile = 'cycling';
+                        googleTravelMode = 'bicycling';
+                        break;
+                    default:
+                        osrmProfile = 'driving';
+                        googleTravelMode = 'driving';
+                }
+                
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(startLat, startLng),
+                        L.latLng(latitude, longitude)
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1',
+                        profile: osrmProfile
+                    }),
+                    lineOptions: {
+                        styles: [lineStyle[mode]],
+                        extendToWaypoints: true,
+                        missingRouteTolerance: 10
+                    },
+                    routeWhileDragging: false,
+                    showAlternatives: false,
+                    show: false,
+                    addWaypoints: false,
+                    fitSelectedRoutes: true,
+                    createMarker: function() { return null; }
+                }).addTo(map);
 
-            //     function formatDistance(meters) {
-            //         if (meters >= 1000) {
-            //             const km = (meters / 1000).toFixed(2);
-            //             if (km.endsWith('.00')) {
-            //                 return `${parseInt(km)} km`;
-            //             } else if (km.endsWith('0')) {
-            //                 return `${parseFloat(km).toFixed(1)} km`;
-            //             }
-            //             return `${km} km`;
-            //         }
-            //         return `${Math.round(meters)} m`;
-            //     }
+                // Fonctions utilitaires pour formater le temps et la distance
+                function formatDuration(minutes) {
+                    if (minutes >= 60) {
+                        const hours = Math.floor(minutes / 60);
+                        const remainingMinutes = minutes % 60;
+                        if (remainingMinutes === 0) {
+                            return `${hours}h`;
+                        }
+                        return `${hours}h${remainingMinutes}min`;
+                    }
+                    return `${minutes}min`;
+                }
 
-            //     walkingRouter.route([
-            //         L.latLng(startLat, startLng),
-            //         L.latLng(latitude, longitude)
-            //     ], function(err, routes) {
-            //         if (!err && routes && routes.length > 0) {
-            //             const route = routes[0];
-            //             const walkingDistanceMeters = route.summary.totalDistance;
-            //             const walkingDurationSeconds = route.summary.totalTime;
-            //             const walkingDurationMinutes = Math.round(walkingDurationSeconds / 60);
+                function formatDistance(meters) {
+                    if (meters >= 1000) {
+                        const km = (meters / 1000).toFixed(2);
+                        // Retirer les décimales inutiles
+                        if (km.endsWith('.00')) {
+                            return `${parseInt(km)} km`;
+                        } else if (km.endsWith('0')) {
+                            return `${parseFloat(km).toFixed(1)} km`;
+                        }
+                        return `${km} km`;
+                    }
+                    return `${Math.round(meters)} m`;
+                }
+
+                // Mettre à jour les informations lors de la découverte de l'itinéraire
+                routingControl.on('routesfound', function(e) {
+                    const routes = e.routes;
+                    if (routes && routes.length > 0) {
+                        const route = routes[0];
+                        const distanceMeters = route.summary.totalDistance;
+                        const durationSeconds = route.summary.totalTime;
+                        const durationMinutes = Math.round(durationSeconds / 60);
                         
-            //             // Formater la distance et la durée
-            //             const formattedDistance = formatDistance(walkingDistanceMeters);
-            //             const formattedDuration = formatDuration(walkingDurationMinutes);
+                        // Pour debug: afficher les données brutes
+                        console.log(`Mode: ${mode}, Distance: ${distanceMeters}m, Durée OSRM: ${durationMinutes}min`);
                         
-            //             document.getElementById('walking-info').textContent = 
-            //                 `${formattedDuration} (${formattedDistance})`;
-            //             document.getElementById('walking-info').classList.remove('text-danger');
-            //         } else {
-            //             document.getElementById('walking-info').textContent = 'Non disponible';
-            //             document.getElementById('walking-info').classList.add('text-danger');
-            //         }
-            //     });
-            // }
+                        // Appliquer des facteurs de correction réalistes
+                        let adjustedMinutes = durationMinutes;
+                        let note = '';
+                        
+                        // Vitesses moyennes réalistes (en km/h) :
+                        // Voiture : 40-50 km/h en ville
+                        // Vélo : 12-18 km/h
+                        // Marche : 4-6 km/h
+                        
+                        // Si le temps semble irréaliste (trop court pour vélo/marche), on corrige
+                        if (mode === 'walking') {
+                            // Temps minimal réaliste pour la marche : ~15 min/km
+                            const realisticWalkMinutes = Math.round(distanceMeters / 1000 * 15);
+                            if (durationMinutes < realisticWalkMinutes * 0.5) {
+                                // Si le temps OSRM est moins de la moitié du temps réaliste
+                                adjustedMinutes = realisticWalkMinutes;
+                                note = ' (estimation)';
+                                console.log(`Correction marche: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            }
+                        } else if (mode === 'bicycling') {
+                            // Temps minimal réaliste pour le vélo : ~4 min/km
+                            const realisticBikeMinutes = Math.round(distanceMeters / 1000 * 4);
+                            if (durationMinutes < realisticBikeMinutes * 0.5) {
+                                // Si le temps OSRM est moins de la moitié du temps réaliste
+                                adjustedMinutes = realisticBikeMinutes;
+                                note = ' (estimation)';
+                                console.log(`Correction vélo: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            }
+                        } else if (mode === 'driving') {
+                            // Temps minimal réaliste pour la voiture : ~1.5 min/km
+                            const realisticCarMinutes = Math.round(distanceMeters / 1000 * 1.5);
+                            if (durationMinutes < realisticCarMinutes * 0.5) {
+                                adjustedMinutes = Math.max(1, realisticCarMinutes);
+                                note = ' (estimation)';
+                                console.log(`Correction voiture: ${durationMinutes}min → ${adjustedMinutes}min`);
+                            }
+                        }
+                        
+                        // S'assurer que le temps n'est pas inférieur à 1 minute
+                        adjustedMinutes = Math.max(1, adjustedMinutes);
+                        
+                        // Formater la distance et la durée
+                        const formattedDistance = formatDistance(distanceMeters);
+                        const formattedDuration = formatDuration(adjustedMinutes);
+                        
+                        // Mettre à jour l'interface
+                        document.getElementById('distance-info').textContent = formattedDistance;
+                        document.getElementById('distance-info').classList.remove('text-danger');
+                        
+                        const modeText = {
+                            'driving': 'voiture',
+                            'walking': 'marche',
+                            'bicycling': 'vélo'
+                        };
+                        
+                        const durationText = `${formattedDuration} en ${modeText[mode]}${note}`;
+                        document.getElementById('duration-info').textContent = durationText;
+                        document.getElementById('duration-info').classList.remove('text-danger');
+                        
+                        // Mettre à jour le lien Google Maps avec le bon mode
+                        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${latitude},${longitude}&travelmode=${googleTravelMode}`;
+                        document.getElementById('googleMapsBtn').href = googleMapsUrl;
+                        
+                        // Ajuster la vue pour voir les deux points
+                        const bounds = L.latLngBounds(
+                            [startLat, startLng],
+                            [latitude, longitude]
+                        );
+                        map.fitBounds(bounds, { padding: [50, 50] });
+                    }
+                });
+
+                routingControl.on('routingerror', function(e) {
+                    console.error('Erreur de calcul d\'itinéraire pour le mode', mode, ':', e.error);
+                    
+                    // Si erreur, on peut estimer le temps basé sur la distance
+                    if (userPosition) {
+                        const distance = calculateDistance(userPosition.lat, userPosition.lng, latitude, longitude);
+                        let estimatedMinutes;
+                        
+                        // Temps réalistes basés sur la distance
+                        switch(mode) {
+                            case 'driving':
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 1.5)); // ~1.5 min/km
+                                break;
+                            case 'walking':
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 15)); // ~15 min/km
+                                break;
+                            case 'bicycling':
+                                estimatedMinutes = Math.max(1, Math.round(distance / 1000 * 4)); // ~4 min/km
+                                break;
+                        }
+                        
+                        const formattedDuration = formatDuration(estimatedMinutes);
+                        const modeText = {
+                            'driving': 'voiture',
+                            'walking': 'marche',
+                            'bicycling': 'vélo'
+                        };
+                        
+                        document.getElementById('duration-info').textContent = `${formattedDuration} en ${modeText[mode]} (estimation)`;
+                    } else {
+                        document.getElementById('duration-info').textContent = `Erreur pour ${mode}`;
+                    }
+                    
+                    document.getElementById('duration-info').classList.add('text-danger');
+                });
+            }
+
+            // Fonction pour calculer la distance en ligne droite (Haversine)
+            function calculateDistance(lat1, lon1, lat2, lon2) {
+                const R = 6371e3; // Rayon de la Terre en mètres
+                const φ1 = lat1 * Math.PI/180;
+                const φ2 = lat2 * Math.PI/180;
+                const Δφ = (lat2-lat1) * Math.PI/180;
+                const Δλ = (lon2-lon1) * Math.PI/180;
+
+                const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                        Math.cos(φ1) * Math.cos(φ2) *
+                        Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+                return R * c; // Distance en mètres
+            }
 
             // Gestionnaire pour les boutons de mode de transport
-            // document.querySelectorAll('.btn-transport').forEach(btn => {
-            //     btn.addEventListener('click', function() {
-            //         document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-            //         this.classList.add('active');
-            //         currentMapMode = this.dataset.mode;
+            document.querySelectorAll('.btn-transport').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentMapMode = this.dataset.mode;
                     
-            //         // Mettre à jour l'icône active
-            //         const icon = this.querySelector('i');
-            //         const allIcons = document.querySelectorAll('.btn-transport i');
-            //         allIcons.forEach(i => i.style.opacity = '0.7');
-            //         icon.style.opacity = '1';
+                    // Mettre à jour l'icône active
+                    const icon = this.querySelector('i');
+                    const allIcons = document.querySelectorAll('.btn-transport i');
+                    allIcons.forEach(i => i.style.opacity = '0.7');
+                    icon.style.opacity = '1';
                     
-            //         if (userPosition) {
-            //             // Mettre à jour l'itinéraire avec le mode sélectionné
-            //             updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
-                        
-            //         }
-            //     });
-            // });
-
-            // // Mettre à jour aussi l'info à pied (toujours calculée séparément)
-            // if (currentMapMode !== 'walking') {
-            //     updateWalkingInfo(userPosition.lat, userPosition.lng);
-            // }
+                    if (userPosition) {
+                        // Mettre à jour l'itinéraire avec le mode sélectionné
+                        updateRoute(userPosition.lat, userPosition.lng, currentMapMode);
+                    }
+                });
+            });
 
             // Bouton recentrer
             document.getElementById('recenterBtn').addEventListener('click', function() {
