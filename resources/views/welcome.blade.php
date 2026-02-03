@@ -330,11 +330,11 @@
                                         @endif
                                     </ul>
                                     {{-- <hr> --}}
-                                    <h6 class="item d-flex align-items-center">
+                                    <p class="item d-flex align-items-center">
                                         <i class="fa-solid fa-map-location-dot me-1 text-dark"></i>
-                                        <span>{{ $item->property->city_name ?? '' }} - {{ $item->property->district_name ?? '' }}</span>
+                                        <span class="fw-bold fs-6">{{ $item->property->city_name ?? '' }} - {{ $item->property->commune_name ?? '' }}</span>
                                         {{-- <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span> --}}
-                                    </h6>
+                                    </p>
                                 </div>
                             @endif
                             {{-- <div class="archive-bottom d-flex justify-content-between align-items-center">
@@ -575,8 +575,9 @@
                                             href="{{ route('appart.detail.show', $firstAppart->uuid) }}"
                                             class="link">{{ $firstAppart->title }}</a></h5>
                                     <div class="desc"><i class="icon icon-mapPin"></i>
-                                        <p>{{ $firstAppart->property->adresse ?? 'Adresse non définie' }}</p>
+                                        <p>{{ $firstAppart->property->address_name ?? 'Adresse non définie' }}</p>
                                     </div>
+                                    {{-- @dd($firstAppart->property->adress_name) --}}
                                     <p class="note">{!! Str::limit($firstAppart->description, 100) !!}</p>
                                     <ul class="meta-list">
                                         <li class="item"><i
@@ -645,7 +646,8 @@
                                                 href="{{ route('appart.detail.show', $item->uuid) }}"
                                                 class="link">{{ $item->title }}</a></div>
                                         <div class="desc"><i class="icon icon-mapPin"></i>
-                                            <p>{{ $item->property->adresse ?? '' }}</p>
+                                            <p>{{ $firstAppart->property->address_name ?? 'Adresse non définie' }}</p>
+                                            {{-- <p>{{ $item->property->adresse ?? '' }}</p> --}}
                                         </div>
                                         <ul class="meta-list">
                                             <li class="item"><i

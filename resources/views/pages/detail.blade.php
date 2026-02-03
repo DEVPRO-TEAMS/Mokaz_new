@@ -83,9 +83,11 @@
                     </div>
                     <div class="info-box">
                         <div class="label">LOCALISATION:</div>
-                        <p class="meta-item"><span
+                        <p class="meta-item text-wrap"><span
+                                class="icon icon-mapPin"></span>{{ $appart->property->address_name ?? '' }}</p>
+                        {{-- <p class="meta-item"><span
                                 class="icon icon-mapPin"></span>{{ $appart->property->ville->label ?? '' }},
-                            {{ $appart->property->pays->label ?? '' }}</p>
+                            {{ $appart->property->pays->label ?? '' }}</p> --}}
                     </div>
                     <ul class="icon-box">
                         <li><a href="#" class="item"><span class="icon icon-heart"></span></a></li>

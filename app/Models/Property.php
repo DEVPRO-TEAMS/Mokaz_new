@@ -74,6 +74,7 @@ class Property extends Model
         'city_name',
         'district_name',
         'address_name',
+        'commune_name',
     ];
 
     // Attributs virtuels (accessors)
@@ -96,6 +97,10 @@ class Property extends Model
     public function getAddressNameAttribute()
     {
         return $this->attributes['address_name'] ?? null;
+    }
+    public function getCommuneNameAttribute()
+    {
+        return $this->attributes['commune_name'] ?? null;
     }
 
 

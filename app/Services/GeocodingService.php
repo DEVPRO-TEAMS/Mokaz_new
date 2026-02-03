@@ -34,6 +34,11 @@ class GeocodingService
                                 ?? $data['address']['town']
                                 ?? $data['address']['village']
                                 ?? null,
+                'commune' => $data['address']['municipality']
+                            ?? $data['address']['neighbourhood']
+                            ?? $data['address']['suburb']
+                            ?? $data['address']['hamlet']
+                            ?? null,
                 'district' => $data['address']['suburb']
                                 ?? $data['address']['neighbourhood']
                                 ?? null,

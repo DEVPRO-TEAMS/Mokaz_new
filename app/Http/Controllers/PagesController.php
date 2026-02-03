@@ -179,27 +179,30 @@ class PagesController extends Controller
         $apparts = $query->paginate($perPage);
 
         // Reverse geocoding POUR CHAQUE APPARTEMENT
-    foreach ($apparts as $appart) {
+        foreach ($apparts as $appart) {
 
-        if (
-            $appart->property &&
-            $appart->property->latitude &&
-            $appart->property->longitude
-        ) {
-            $location = GeocodingService::reverse(
-                $appart->property->latitude,
+            if (
+                $appart->property &&
+                $appart->property->latitude &&
                 $appart->property->longitude
-            );
+            ) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+                // dd($location);
 
-            if ($location) {
-                // Injection dynamique
-                $appart->property->setAttribute('country_name',  $location['country']);
-                $appart->property->setAttribute('city_name',     $location['city']);
-                $appart->property->setAttribute('district_name', $location['district']);
-                $appart->property->setAttribute('address_name',  $location['address']);
+                if ($location) {
+                    // Injection dynamique
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
             }
         }
-    }
+        // dd($apparts);
     // dd($apparts);
 
         $appartements = Appartement::where('etat', 'actif')
@@ -226,6 +229,29 @@ class PagesController extends Controller
             ->take(3)
             ->with('tarifications')
             ->get();
+        foreach ($bestApparts as $appart) {
+
+            if (
+                $appart->property &&
+                $appart->property->latitude &&
+                $appart->property->longitude
+            ) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+                // dd($location);
+
+                if ($location) {
+                    // Injection dynamique
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        }
 
         // appartemnets par commodité
         foreach ($appartements as $appartement) {
@@ -455,6 +481,29 @@ class PagesController extends Controller
 
         // Pagination des appartements
         $apparts = $query->paginate($perPage);
+        // Reverse geocoding POUR CHAQUE APPARTEMENT
+        foreach ($apparts as $appart) {
+
+            if (
+                $appart->property &&
+                $appart->property->latitude &&
+                $appart->property->longitude
+            ) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+
+                if ($location) {
+                    // Injection dynamique
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        }
 
         $appartements = Appartement::where('etat', 'actif')
             ->where('appartements.property_uuid', $uuid)
@@ -629,6 +678,29 @@ class PagesController extends Controller
 
         // Pagination des appartements
         $apparts = $query->paginate($perPage);
+        // Reverse geocoding POUR CHAQUE APPARTEMENT
+        foreach ($apparts as $appart) {
+
+            if (
+                $appart->property &&
+                $appart->property->latitude &&
+                $appart->property->longitude
+            ) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+
+                if ($location) {
+                    // Injection dynamique
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        }
 
         $appartements = Appartement::where('etat', 'actif')
             ->where('nbr_available', '>', 0)->get();
@@ -685,6 +757,30 @@ class PagesController extends Controller
     public function show(string $uuid)
     {
         $appart = Appartement::where('etat', '=', 'actif')->where('uuid', $uuid)->first();
+        // Reverse geocoding POUR L'APPARTEMENT
+        if (
+                $appart->property &&
+                $appart->property->latitude &&
+                $appart->property->longitude
+            ) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+
+                if ($location) {
+                    // Injection dynamique
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        // foreach ($apparts as $appart) {
+
+            
+        // }
 
         $visitUuid = session('visit_uuid');
 

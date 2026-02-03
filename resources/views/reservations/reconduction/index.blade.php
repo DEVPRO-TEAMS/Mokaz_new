@@ -37,6 +37,155 @@
                 </span>
             </div>
 
+            <form action="{{ route('reservation.reconduction', $reservation->uuid) }}" method="get">
+                <div class="wd-find-select shadow-st mb-4 border">
+                    <div class="inner-group">
+                        <div class="form-group-1 search-form form-style">
+                            <label>Mot-clé</label>
+                            <input type="text" class="form-control" placeholder="Par Mot-clé." name="search"
+                                value="{{ request('search') }}">
+                        </div>
+
+                        <div class="form-group-2 form-style">
+                            <label for="ville">Ville</label>
+                            <div class="group-ip">
+                                <select name="ville" id="ville" class="nice-select form-select selection">
+                                    <option value="" selected>Toutes les villes</option>
+                                    @foreach ($cities as $city)
+                                        <option value="{{ $city->code . ' ' . $city->label }}"
+                                            {{ request('ville') == $city->code . ' ' . $city->label ? 'selected' : '' }}>
+                                            {{ $city->label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group-2 form-style d-none">
+                            <label for="">Localisation</label>
+                            <div class="group-ip">
+                                <input type="text" class="form-control" placeholder="Par Localisation" name="location"
+                                    value="{{ request('location') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group-3 form-style">
+                            <label>Type</label>
+                            <div class="group-select">
+                                <select name="type" id="type" class="nice-select form-select">
+                                    <option value="" selected>Tous</option>
+                                    @foreach ($typeAppart as $type)
+                                        <option value="{{ $type->libelle }}"
+                                            {{ request('type') == $type->libelle ? 'selected' : '' }}>
+                                            {{ $type->libelle }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group-3 form-style">
+                            <label>Categorie</label>
+                            <div class="group-select">
+                                <select name="categorie" id="categorie" class="nice-select form-select">
+                                    <option value="">Tous</option>
+                                    @foreach ($categories as $categorie)
+                                        <option value="{{ $categorie->libelle }}"
+                                            {{ request('categorie') == $categorie->libelle ? 'selected' : '' }}>
+                                            {{ $categorie->libelle }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group-4 box-filter">
+                            <a class="filter-advanced pull-right">
+                                    <span class="icon icon-faders"></span> 
+                                    <span class="text-1">Avancé</span>                                                                      
+                            </a>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="tf-btn primary">Rechercher</button>
+                </div>
+                <div class="wd-search-form" style="width: 63%">
+                    <div class="grid-1 group-box group-price">
+                        <div class="widget-price">
+                            <div class="box-title-price">
+                                <span class="title-price">Prix</span>
+                                <div class="caption-price">
+                                    <span>entre</span>
+                                    <span id="slider-range-value1" class="fw-7"></span> FCFA
+                                    <span>et</span>
+                                    <span id="slider-range-value2" class="fw-7"></span> FCFA
+                                </div>
+                            </div>
+
+                            <div id="slider-range"
+                                data-min="{{ $minPrice }}"
+                                data-max="{{ $maxPrice }}">
+                            </div>
+
+                            <div class="slider-labels">
+                                <input type="hidden"
+                                    name="min_price"
+                                    id="min_price"
+                                    value="{{ request('min_price', $minPrice) }}">
+
+                                <input type="hidden"
+                                    name="max_price"
+                                    id="max_price"
+                                    value="{{ request('max_price', $maxPrice) }}">
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="grid-1 group-box">
+                        <div class="group-select grid-3">
+                            <div class="box-select">
+                                <label class="title-select text-variant-1">Nombre de chambres</label>
+                                <input type="number" class="form-control" placeholder="Chambres" name="rooms" value="{{ request('rooms') }}">
+                            </div>
+                            <div class="box-select">
+                                <label class="title-select text-variant-1">Nombre de salle de bains</label>
+                                <input type="number" class="form-control" placeholder="Salle de bains" name="bathrooms" value="{{ request('bathrooms') }}">
+                            </div>
+                            <div class="box-select">
+                                <label class="title-select text-variant-1">Type de séjour</label>
+                                <select name="sejour" id="sejour" class="nice-select form-select">
+                                    <option value="">Tous</option>
+                                    <option value="Heure">séjour en heures</option>
+                                    <option value="Jour">séjour en jours</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    @if(count($commodities))
+                        <div class="group-checkbox">
+                            <div class="text-1">Commodités :</div>
+
+                            <div class="group-amenities mt-8 grid-6">
+                                @foreach($commodities as $index => $commodity)
+                                    <div class="box-amenities">
+                                        <fieldset class="amenities-item">
+                                            <input
+                                                type="checkbox"
+                                                name="commodities[]"
+                                                class="tf-checkbox style-1"
+                                                id="cb{{ $index }}"
+                                                value="{{ $commodity }}"
+                                                {{ in_array($commodity, request('commodities', [])) ? 'checked' : '' }}
+                                            >
+                                            <label for="cb{{ $index }}" class="text-cb-amenities">
+                                                {{ ucfirst($commodity) }}
+                                            </label>
+                                        </fieldset>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </form>
+
             <div class="scroll-container" style="max-height: 85vh; overflow-y: auto; padding-right: 15px;">
                 <div class="row">
                     @forelse($apparts->where('nbr_available', '>', 0) as $appart)
@@ -66,7 +215,8 @@
                                     <div class="mb-2">
                                         <h6 class="fw-bold mb-1 text-truncate">{{ $appart->title }}</h6>
                                         <p class="text-muted text-xs mb-0">
-                                            <i class="fas fa-map-marker-alt"></i> {{ $appart->property->ville->label ?? 'N/A' }}, {{ $appart->property->pays->label ?? '' }}
+                                            <i class="fas fa-map-marker-alt"></i> {{ $appart->property->address_name ?? '' }}
+                                            {{-- <i class="fas fa-map-marker-alt"></i> {{ $appart->property->ville->label ?? 'N/A' }}, {{ $appart->property->pays->label ?? '' }} --}}
                                         </p>
                                     </div>
 

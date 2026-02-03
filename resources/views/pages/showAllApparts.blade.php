@@ -321,6 +321,9 @@
                                 <div class="desc">
                                     <p>{!! Str::words($item->description ?? '', 8, '...') !!}</p>
                                 </div>
+                                @if (!empty($item->property->address_name))
+                                    <div class="desc"><i class="fs-16 icon icon-mapPin"></i><p>{{ $item->property->address_name ?? '' }}</p> </div>
+                                @endif
                                 <ul class="meta-list d-flex align-items-center justify-content-between">
                                     <li class="item"><i class="icon icon-bed"></i> <span> {{ $item->nbr_room ?? 0 }}
                                             Chambre </span></li>
@@ -389,7 +392,8 @@
                                         @endif
                                         <li class="item d-flex align-items-center">
                                             <i class="fa-solid fa-map-location-dot me-1 text-dark"></i>
-                                            <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span>
+                                            <span>{{ $item->property->city_name ?? '' }} - {{ $item->property->commune_name ?? '' }}</span>
+                                            {{-- <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span> --}}
                                         </li>
                                     </ul>
                                 @endif

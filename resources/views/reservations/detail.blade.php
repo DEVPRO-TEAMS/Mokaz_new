@@ -20,8 +20,21 @@
                 $limit = $start->copy()->addMinutes($totalMinutes * 0.06);
                 $date_limit = $limit->format('d/m/Y à H\hi');
                 $now = now();
+                $date_reservation = \Carbon\Carbon::parse($reservation->created_at);
                 $isActive = $start <= $now && $end >= $now;
                 $isUpcoming = $start > $now;
+
+                // Calculer la différence en jours entre la date de réservation et la date de début
+                $daysUntilStay = $date_reservation->diffInDays($start, false);
+                
+                // Calculer la différence en heures depuis la création de la réservation
+                $hoursSinceReservation = $date_reservation->diffInHours(now(), false);
+                
+                // Le client peut annuler si :
+                // 1. Il a réservé 7 jours ou plus avant la date d'arrivée
+                // 2. OU s'il est encore dans les 24 heures suivant la réservation
+                $canCancel = ($daysUntilStay >= 7) && ($hoursSinceReservation <= 24);
+
             @endphp
 
             <!-- Carte d'état de réservation -->
@@ -174,11 +187,16 @@
                             </h6>
                         </div>
                         <div class="card-body-custom">
-                            @if($reservation->status === 'confirmed' && $isUpcoming)
+                            @if(($reservation->status === 'confirmed' || $reservation->status === 'pending') && $canCancel)
                                 <button class="btn-action btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                     <i class="fas fa-times-circle me-2"></i>Annuler la réservation
                                 </button>
                             @endif
+                            {{-- @if($reservation->status === 'confirmed' && $isUpcoming)
+                                <button class="btn-action btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                                    <i class="fas fa-times-circle me-2"></i>Annuler la réservation
+                                </button>
+                            @endif --}}
                             
                             {{-- <button class="btn-action btn-secondary mt-2" onclick="window.print()">
                                 <i class="fas fa-print me-2"></i>Imprimer le reçu
@@ -190,9 +208,11 @@
                             {{-- <a href="tel:+2250787245197" class="btn-action btn-support mt-2">
                                 <i class="fas fa-headset me-2"></i>Contacter le support
                             </a> --}}
-                            <a href="{{ route('reservation.reconduction', $reservation->uuid) }}" class="btn-action btn-support mt-2">
-                                <i class="fas fa-redo me-1"></i>Reconduire la reservation
-                            </a>
+                            @if($reservation->status === 'confirmed' || $reservation->status === 'pending')
+                                <a href="{{ route('reservation.reconduction', $reservation->uuid) }}" class="btn-action btn-support mt-2">
+                                    <i class="fas fa-redo me-1"></i>Reconduire la reservation
+                                </a>
+                            @endif
                         </div>
                     </div>
 
