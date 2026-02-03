@@ -695,7 +695,7 @@
             const dateLimit = @json($date_limit) || null;
             const reservationUuid = reservationData.uuid || null;
             let receiptDownloaded = false;
-            let currentMapMode = 'driving';
+            // let currentMapMode = 'driving';
 
             // Générer le reçu
             function generateReceipt() {
@@ -879,18 +879,18 @@
             }
 
             // Gestionnaire pour les boutons de mode de transport
-            document.querySelectorAll('.btn-transport').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentMapMode = this.dataset.mode;
-                    // Ici, ajouter la logique pour recalculer l'itinéraire avec le nouveau mode
-                    updateMapWithMode(currentMapMode);
-                });
-            });
+            // document.querySelectorAll('.btn-transport').forEach(btn => {
+            //     btn.addEventListener('click', function() {
+            //         document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
+            //         this.classList.add('active');
+            //         currentMapMode = this.dataset.mode;
+            //         // Ici, ajouter la logique pour recalculer l'itinéraire avec le nouveau mode
+            //         updateMapWithMode(currentMapMode);
+            //     });
+            // });
 
-            // Initialiser la carte
-            initializeMap();
+            // // Initialiser la carte
+            // initializeMap();
 
             // Initialiser le reçu
             generateReceipt();
@@ -960,39 +960,171 @@
             });
 
             // Initialisation de la carte (version simplifiée)
-            function initializeMap() {
-                const latitude = @json($reservation->property->latitude ?? 0);
-                const longitude = @json($reservation->property->longitude ?? 0);
+            // function initializeMap() {
+            //     const latitude = @json($reservation->property->latitude ?? 0);
+            //     const longitude = @json($reservation->property->longitude ?? 0);
                 
-                if (latitude && longitude) {
-                    // Simuler un chargement
-                    setTimeout(() => {
-                        document.getElementById('distance-info').textContent = '3.5 km';
-                        document.getElementById('duration-info').textContent = '15 min en voiture';
-                    }, 1500);
-                }
-            }
+            //     if (latitude && longitude) {
+            //         // Simuler un chargement
+            //         setTimeout(() => {
+            //             document.getElementById('distance-info').textContent = '3.5 km';
+            //             document.getElementById('duration-info').textContent = '15 min en voiture';
+            //         }, 1500);
+            //     }
+            // }
 
-            function updateMapWithMode(mode) {
-                // Ici, ajouter la logique pour mettre à jour la carte avec le mode de transport sélectionné
-                const modeText = {
-                    'driving': 'en voiture',
-                    'walking': 'à pied',
-                    'bicycling': 'en vélo'
-                };
+            // function updateMapWithMode(mode) {
+            //     // Ici, ajouter la logique pour mettre à jour la carte avec le mode de transport sélectionné
+            //     const modeText = {
+            //         'driving': 'en voiture',
+            //         'walking': 'à pied',
+            //         'bicycling': 'en vélo'
+            //     };
                 
-                document.getElementById('duration-info').textContent = `Calcul ${modeText[mode]}...`;
+            //     document.getElementById('duration-info').textContent = `Calcul ${modeText[mode]}...`;
                 
-                // Simuler un calcul
-                setTimeout(() => {
-                    const durations = {
-                        'driving': '15 min',
-                        'walking': '45 min',
-                        'bicycling': '25 min'
-                    };
-                    document.getElementById('duration-info').textContent = `${durations[mode]} ${modeText[mode]}`;
-                }, 1000);
-            }
+            //     // Simuler un calcul
+            //     setTimeout(() => {
+            //         const durations = {
+            //             'driving': '15 min',
+            //             'walking': '45 min',
+            //             'bicycling': '25 min'
+            //         };
+            //         document.getElementById('duration-info').textContent = `${durations[mode]} ${modeText[mode]}`;
+            //     }, 1000);
+            // }
         });
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const latitude = @json($reservation->property->latitude ?? 0);
+            const longitude = @json($reservation->property->longitude ?? 0);
+
+            let map, routingControl, userMarker;
+            let currentMode = 'driving';
+            let userLat = null, userLng = null;
+
+            /* Carte */
+            map = L.map('map-location-property-intinerary').setView([latitude, longitude], 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            /* Marqueur logement */
+            const propertyIcon = L.icon({
+                iconUrl: "{{ asset('assets/images/location/map-icon.png') }}",
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+
+            L.marker([latitude, longitude], { icon: propertyIcon })
+                .addTo(map)
+                .bindPopup("🏠 Logement");
+
+            /* Icône utilisateur */
+            const userIcon = L.divIcon({
+                html: `<div style="
+                    width:22px;height:22px;
+                    background:#0d6efd;
+                    border-radius:50%;
+                    border:3px solid white;
+                    box-shadow:0 0 10px rgba(13,110,253,.8)">
+                </div>`,
+                iconSize: [22,22],
+                iconAnchor: [11,11]
+            });
+
+            /* Routing */
+            function updateRoute() {
+                if (!userLat || !userLng) return;
+
+                if (routingControl) map.removeControl(routingControl);
+
+                const profile = currentMode === 'walking'
+                    ? 'foot'
+                    : currentMode === 'bicycling'
+                        ? 'bike'
+                        : 'car';
+
+                routingControl = L.Routing.control({
+                    waypoints: [
+                        L.latLng(userLat, userLng),
+                        L.latLng(latitude, longitude)
+                    ],
+                    router: L.Routing.osrmv1({
+                        serviceUrl: 'https://router.project-osrm.org/route/v1',
+                        profile: profile
+                    }),
+                    addWaypoints: false,
+                    draggableWaypoints: false,
+                    show: false,
+                    lineOptions: {
+                        styles: [{ color: '#dc3545', weight: 6 }]
+                    }
+                }).addTo(map);
+
+                routingControl.on('routesfound', function (e) {
+                    const route = e.routes[0];
+                    const distanceKm = (route.summary.totalDistance / 1000).toFixed(2);
+                    const durationMin = Math.round(route.summary.totalTime / 60);
+
+                    document.getElementById('distance-info').textContent = distanceKm + ' km';
+                    document.getElementById('duration-info').textContent =
+                        durationMin + ' min ' + getModeLabel();
+
+                    const bounds = L.latLngBounds(
+                        [userLat, userLng],
+                        [latitude, longitude]
+                    );
+                    map.fitBounds(bounds, { padding: [50, 50] });
+
+                    document.getElementById('googleMapsBtn').href =
+                        `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${latitude},${longitude}&travelmode=${currentMode}&dir_action=navigate`;
+                });
+            }
+
+            function getModeLabel() {
+                return currentMode === 'walking'
+                    ? 'à pied'
+                    : currentMode === 'bicycling'
+                        ? 'en vélo'
+                        : 'en voiture';
+            }
+
+            /* GPS */
+            navigator.geolocation.watchPosition(pos => {
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+
+                if (!userMarker) {
+                    userMarker = L.marker([userLat, userLng], { icon: userIcon })
+                        .addTo(map)
+                        .bindPopup("📍 Vous");
+                } else {
+                    userMarker.setLatLng([userLat, userLng]);
+                }
+
+                updateRoute();
+            }, () => alert("Position GPS indisponible"), { enableHighAccuracy: true });
+
+            /* Boutons mode */
+            document.querySelectorAll('.btn-transport').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.btn-transport')
+                        .forEach(b => b.classList.remove('active'));
+
+                    this.classList.add('active');
+                    currentMode = this.dataset.mode;
+
+                    document.getElementById('duration-info').textContent = 'Recalcul…';
+                    updateRoute();
+                });
+            });
+
+        });
+    </script>
+
 @endsection
