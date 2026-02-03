@@ -174,18 +174,18 @@
                             href="{{ route('partner.reservation.index') }}">
                                 <i class="bi bi-calendar-check me-3 fs-5"></i>
                                 <span>Réservations</span>
-                                <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->where('partner_uuid', Auth::user()->partner_uuid)->count() ?? 0 }}</span>
+                                <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->whereHas('paiement')->where('partner_uuid', Auth::user()->partner_uuid)->count() ?? 0 }}</span>
                             </a>
                         </li>
                         @else
-                         <li class="nav-item mb-1">
-                            <a class="nav-link {{ Route::currentRouteName() == 'admin.reservation.index' ? 'active' : ''}} d-flex align-items-center py-2 px-3 rounded text-dark" 
-                            href="{{ route('admin.reservation.index') }}">
-                                <i class="bi bi-calendar-check me-3 fs-5"></i>
-                                <span>Réservations</span>
-                                <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->count() }}</span>
-                            </a>
-                        </li>
+                            <li class="nav-item mb-1">
+                                <a class="nav-link {{ Route::currentRouteName() == 'admin.reservation.index' ? 'active' : ''}} d-flex align-items-center py-2 px-3 rounded text-dark" 
+                                href="{{ route('admin.reservation.index') }}">
+                                    <i class="bi bi-calendar-check me-3 fs-5"></i>
+                                    <span>Réservations</span>
+                                    <span class="badge bg-danger ms-auto">{{ $reservations->where('status', 'pending')->whereHas('paiement')->count() }}</span>
+                                </a>
+                            </li>
                         @endif
     
                         @php

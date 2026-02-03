@@ -180,13 +180,16 @@
                                 </button>
                             @endif
                             
-                            <button class="btn-action btn-secondary mt-2" onclick="window.print()">
+                            {{-- <button class="btn-action btn-secondary mt-2" onclick="window.print()">
                                 <i class="fas fa-print me-2"></i>Imprimer le reçu
-                            </button>
+                            </button> --}}
                             
-                            <a href="{{ route('contact') }}" class="btn-action btn-support mt-2">
+                            <a href="tel:+2250787245197" class="btn-action btn-secondary mt-2">
                                 <i class="fas fa-headset me-2"></i>Contacter le support
                             </a>
+                            {{-- <a href="tel:+2250787245197" class="btn-action btn-support mt-2">
+                                <i class="fas fa-headset me-2"></i>Contacter le support
+                            </a> --}}
                             <a href="{{ route('reservation.reconduction', $reservation->uuid) }}" class="btn-action btn-support mt-2">
                                 <i class="fas fa-redo me-1"></i>Reconduire la reservation
                             </a>
@@ -246,72 +249,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Section carte interactive -->
-            {{-- <div class="modern-card mt-4">
-                <div class="card-header-custom">
-                    <h6 class="mb-0">
-                        <i class="fas fa-map-marked-alt me-2"></i>Itinéraire vers le logement
-                    </h6>
-                    <div class="transport-mode-selector">
-                        <button class="btn-transport active" data-mode="driving">
-                            <i class="fas fa-car"></i> Voiture
-                        </button>
-                        <button class="btn-transport" data-mode="walking">
-                            <i class="fas fa-walking"></i> À pied
-                        </button>
-                        <button class="btn-transport" data-mode="bicycling">
-                            <i class="fas fa-bicycle"></i> Vélo
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body-custom">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div id="map-location-property-intinerary" class="map-container"></div>
-                        </div>
-                        <div class="col-lg-4">
-                            <div class="itinerary-info">
-                                <h6 class="mb-3">Informations d'itinéraire</h6>
-                                
-                                <div class="info-item mb-3">
-                                    <div class="info-icon">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted">Adresse</small>
-                                        <p class="mb-0 fw-bold">{{ $reservation->property->address }}</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-item mb-3">
-                                    <div class="info-icon">
-                                        <i class="fas fa-route"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted">Distance</small>
-                                        <p class="mb-0 fw-bold" id="distance-info">Calcul en cours...</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-item mb-3">
-                                    <div class="info-icon">
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                    <div>
-                                        <small class="text-muted">Temps estimé</small>
-                                        <p class="mb-0 fw-bold" id="duration-info">Calcul en cours...</p>
-                                    </div>
-                                </div>
-                                
-                                <a id="googleMapsBtn" target="_blank" class="btn-navigate">
-                                    <i class="fab fa-google me-2"></i>Ouvrir dans Google Maps
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
             <!-- Section carte interactive -->
             <div class="modern-card mt-4">
                 <div class="card-header-custom">
@@ -384,16 +321,6 @@
                     </div>
                 </div>
             </div>
-
-{{-- <div class="info-item mb-3 d-none">
-    <div class="info-icon">
-        <i class="fas fa-shoe-prints"></i>
-    </div>
-    <div>
-        <small class="text-muted">À pied (alternatif)</small>
-        <p class="mb-0 fw-bold" id="walking-info">Calcul en cours...</p>
-    </div>
-</div> --}}
         </div>
     </section>
 
@@ -2089,7 +2016,7 @@
                             
                             // Si OSRM donne un temps trop court (moins de 70% du temps théorique)
                             if (durationMinutes < theoreticalWalkMinutes * 0.7) {
-                                note = ' (estimation Google)';
+                                note = ' (estimation)';
                                 console.log(`Correction marche Google: ${durationMinutes}min → ${adjustedMinutes}min`);
                             } else {
                                 adjustedMinutes = durationMinutes;
@@ -2103,7 +2030,7 @@
                             
                             // Si OSRM donne un temps trop court
                             if (durationMinutes < theoreticalBikeMinutes * 0.7) {
-                                note = ' (estimation Google)';
+                                note = ' (estimation)';
                                 console.log(`Correction vélo Google: ${durationMinutes}min → ${adjustedMinutes}min`);
                             } else {
                                 adjustedMinutes = durationMinutes;
@@ -2118,7 +2045,7 @@
                             
                             // Si OSRM donne un temps trop optimiste
                             if (durationMinutes < theoreticalCarMinutes * 0.8) {
-                                note = ' (estimation Google)';
+                                note = ' (estimation)';
                                 console.log(`Correction voiture Google: ${durationMinutes}min → ${adjustedMinutes}min`);
                             } else {
                                 adjustedMinutes = durationMinutes;

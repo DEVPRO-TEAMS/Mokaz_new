@@ -9,11 +9,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ReconductedReservation extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $fillable = [
         'uuid',
-        'code',
         'original_reservation_uuid',
         'old_appart_uuid',
         'old_total_price',
@@ -23,9 +22,6 @@ class ReconductedReservation extends Model
         'new_total_price',
         'remaining_to_pay',
         'amount_to_pay_now',
-        'status',
-        'notes',
-        'etat',
     ];
 
     protected $casts = [

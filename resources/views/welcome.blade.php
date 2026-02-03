@@ -274,6 +274,9 @@
                                     </div>
                                     
                                     {{-- <div class="desc"><i class="fs-16 icon icon-mapPin"></i><p>{{ $item->address ?? '' }}</p> </div> --}}
+                                    @if (!empty($item->property->address_name))
+                                        <div class="desc"><i class="fs-16 icon icon-mapPin"></i><p>{{ $item->property->address_name ?? '' }}</p> </div>
+                                    @endif
                                      <ul class="meta-list">
                                         <li class="item">
                                             <i class="icon icon-bed"></i>
@@ -329,7 +332,8 @@
                                     {{-- <hr> --}}
                                     <h6 class="item d-flex align-items-center">
                                         <i class="fa-solid fa-map-location-dot me-1 text-dark"></i>
-                                        <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span>
+                                        <span>{{ $item->property->city_name ?? '' }} - {{ $item->property->district_name ?? '' }}</span>
+                                        {{-- <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span> --}}
                                     </h6>
                                 </div>
                             @endif

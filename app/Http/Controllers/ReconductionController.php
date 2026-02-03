@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Partner;
-use Barryvdh\DomPDF\PDF;
+use App\Models\receipt;
 use App\Models\Appartement;
 use App\Models\Reservation;
 use Illuminate\Support\Str;
 use App\Models\Tarification;
 use Illuminate\Http\Request;
+use  Barryvdh\DomPDF\Facade\PDF;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -18,19 +19,10 @@ use App\Models\ReconductedReservation;
 class ReconductionController extends Controller
 {
 
-    // public function reconduiReservation($reservation_uuid)
-    // {
-    //     $reservation = Reservation::where('uuid', $reservation_uuid)->first();
-    //     $apparts = Appartement::where('etat','actif')->get();
-    //     $appartUids = $apparts->pluck('uuid')->toArray();
-    //     $appartTafication = Tarification::where('etat','actif')->whereIn('appart_uuid', $appartUids)->where('price','>=', $reservation->total_price)->get();
-
-
-    //     return view('reservations.reconduction.index', compact('reservation','appartTafication'));
-    // }
-
-    public function reconduiReservation($reservation_uuid)
+    public function reconduiReservation(Request $request, $reservation_uuid)
     {
+        // ⚙️ Paramètres de pagination et de requête
+        $perPage = $request->get('perPage', 6);
         $reservation = Reservation::where('uuid', $reservation_uuid)->firstOrFail();
 
         $apparts = Appartement::where('etat', 'actif')
@@ -41,8 +33,7 @@ class ReconductionController extends Controller
             ->with(['tarifications' => function ($query) use ($reservation) {
                 $query->where('etat', 'actif')
                     ->where('price', '>=', $reservation->total_price);
-            }])
-            ->get();
+            }])->paginate($perPage);;
 
         return view(
             'reservations.reconduction.index',
@@ -55,8 +46,6 @@ class ReconductionController extends Controller
 
         $appart = Appartement::where('uuid', $uuid)->firstOrFail();
         $reservationOld = Reservation::where('uuid', $reservation_uuid)->firstOrFail();
-        // \dd($reservationOld);
-
         return view('reservations.reconduction.show', compact('appart', 'reservationOld'));
     }
 
@@ -74,6 +63,12 @@ class ReconductionController extends Controller
                 : null;
             
             $visitUuid = session('visit_uuid');
+
+            $reservationOld = Reservation::where('uuid', $request->reservation_old_uuid)->first();
+            $reservationOld->update([
+                'status' => 'reconducted',
+                // 'statut_paiement' => 'cancelled',
+            ]);
 
             $still_to_pay = (float) $request->totalPrice - (float) $request->paymentAmount;
             // Création de la réservation
@@ -101,9 +96,25 @@ class ReconductionController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_amount' => $request->paymentAmount
             ]);
+            if ($reservation) {   
+                // Création de la reconduction
+                ReconductedReservation::create([
+                    'uuid' => Str::uuid(),
+                    'original_reservation_uuid' => $reservationOld->uuid,
+                    'old_appart_uuid' => $reservationOld->appart_uuid,
+                    'old_total_price' => $reservationOld->total_price,
+                    'already_paid' => $reservationOld->payment_amount,
+                    'new_reservation_uuid' => $reservation->uuid,
+                    'new_appart_uuid' => $reservation->appart_uuid,
+                    'new_total_price' => $reservation->total_price,
+                    'remaining_to_pay' => $still_to_pay,
+                    'amount_to_pay_now' => $request->paymentAmount,
+                ]);
 
-            // Génération du PDF après enregistrement
-            $pdfUrl = $this->generateReceiptPDF($reservation);
+                // Génération du PDF après enregistrement
+                $pdfUrl = $this->generateReceiptPDF($reservation);
+            }
+
             DB::commit();
 
             return response()->json([
@@ -147,7 +158,7 @@ class ReconductionController extends Controller
         $pdf->save($filePath);
 
         // Enregistrer dans la table receipts
-        Receipt::create([
+        receipt::create([
             'uuid' => Str::uuid(),
             'code' => 'REC-' . strtoupper(Str::random(6)),
             'reservation_uuid' => $reservation->uuid,
@@ -157,7 +168,5 @@ class ReconductionController extends Controller
 
         return "storage/files/{$directory}/{$filename}";
     }
-
-
   
 }

@@ -111,18 +111,6 @@ class ReservationController extends Controller
                 'payment_method' => $request->payment_method,
                 'payment_amount' => $request->paymentAmount
             ]);
-            // if ($reservation) {
-            //     // faire une decrementation du stock de l'appartement
-            //     $appartement = Appartement::where('uuid', $request->appart_uuid)->first();
-            //     $appartement->nbr_available = (int) $appartement->nbr_available - 1;
-            //     $appartement->save();
-            // }
-
-            // $partner = Partner::where('uuid', $request->partner_uuid)->first();
-            // $phone = $partner->phone;
-            // $message = "Bonjour {$partner->raison_social}, vous avez une nouvelle réservation {$reservation->code}. — MOKAZ ";
-
-            // $this->sendSms($phone, $message);
 
             // Génération du PDF après enregistrement
             $pdfUrl = $this->generateReceiptPDF($reservation);
@@ -417,15 +405,6 @@ class ReservationController extends Controller
     }
 
     // Afficher une réservation
-    // public function show($id)
-    // {
-    //     $reservation = Reservation::find($id);
-    //     if (!$reservation) {
-    //         return response()->json(['success' => false, 'message' => 'Réservation non trouvée'], 404);
-    //     }
-
-    //     return response()->json(['success' => true, 'data' => $reservation]);
-    // }
     public function show($uuid)
     {
         $reservation = Reservation::where('uuid', $uuid)->first();
@@ -436,142 +415,6 @@ class ReservationController extends Controller
         return view('reservations.show', compact('reservation'));
     }
 
-    // public function autoRemiseReservation()
-    // {
-    //     DB::beginTransaction();
-    //     try {
-    //         $now = Carbon::now();
-    //         $results = []; // ✅ Initialisation ici
-
-    //         // On récupère toutes les réservations encore "pending" ou "confirmed"
-    //         $reservationsHavingPaiement = Reservation::whereIn('status', ['pending', 'confirmed'])
-    //             ->whereHas('paiement')
-    //             ->with('appartement')
-    //             ->get();
-
-    //         $reservationsDoesntHavePaiement = Reservation::whereIn('status', ['pending', 'confirmed'])
-    //             ->whereDoesntHave('paiement')
-    //             ->with('appartement')
-    //             ->get();
-
-    //         foreach ($reservationsDoesntHavePaiement as $reservation) {
-    //             $start = Carbon::parse($reservation->start_time);
-    //             $end = Carbon::parse($reservation->end_time);
-
-    //             // 1️ Vérifier le "no show" (10% du séjour écoulé sans l'arrivée du client)
-    //             $totalDurationMinutes = $start->diffInMinutes($end);
-    //             $threshold = $start->copy()->addMinutes($totalDurationMinutes * 0.1);
-
-    //             if ($now->greaterThan($threshold) && $reservation->is_present == false) {
-    //                 // Supprimer la reservation
-    //                 $reservation->delete();
-
-    //                 Log::info('Reservation supprimée: ' . $reservation->code . ' aucun paiement et No show ');
-    //                 continue;
-    //             }
-
-    //             // 2️ Vérifier si le séjour est terminé
-    //             if ($now->greaterThanOrEqualTo($end) && $reservation->is_present == true) {
-    //                 // Supprimer la reservation
-    //                 $reservation->delete();
-
-    //                 Log::info('Reservation supprimée: ' . $reservation->code . ' aucun paiement et finished ');
-    //                 continue;
-    //             }
-    //         }
-    //         foreach ($reservationsHavingPaiement as $reservation) {
-    //             $start = Carbon::parse($reservation->start_time);
-    //             $end = Carbon::parse($reservation->end_time);
-
-    //             // 1️ Vérifier le "no show" (10% du séjour écoulé sans l'arrivée du client)
-    //             $totalDurationMinutes = $start->diffInMinutes($end);
-    //             $threshold = $start->copy()->addMinutes($totalDurationMinutes * 0.1);
-
-    //             if ($now->greaterThan($threshold) && $reservation->is_present == false) {
-    //                 $this->releaseAppartement($reservation, "no_show");
-
-    //                 // $message = "Bonjour, votre réservation N° RES-4MDLGQ a été annulée. Merci de votre compréhension. - " . env('APP_NAME');
-    //                 $message = "Bonjour, votre réservation {$reservation->code} a été annulée. Merci de votre compréhension. — MOKAZ";
-
-    //                 // Récupérer les 10 derniers chiffres du numéro
-    //                 $last10 = substr(preg_replace('/\D/', '', $reservation->phone), -10);
-
-    //                 // Ajouter l'indicatif "225"
-    //                 $phone = "225" . $last10;
-    //                 $this->sendSms($phone, $message);
-
-
-    //                 $emailSubject = "❌ Réservation annulée";
-    //                 $emailContent = view('mail.cancel_reservation', [
-    //                     'reservation' => $reservation
-    //                 ])->render();
-
-    //                 $emailData = [
-    //                     'title' => 'Annulation de votre réservation - MOKAZ',
-    //                     'message' => $emailContent,
-    //                     'status' => $reservation->status,
-    //                     'code' => $reservation->code,
-    //                     'url' => url($reservation->receipt->filepath ?? '#'),
-    //                     'buttonText' => 'Télécharger le reçu',
-    //                 ];
-
-    //                 Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
-    //                 Log::info('Reservation auto remise: No show ');
-    //                 $results[] = [
-    //                     'reservation' => $reservation->code,
-    //                     'status' => 'cancelled',
-    //                     'message' => 'Réservation annulée (no-show)'
-    //                 ];
-    //                 continue;
-    //             }
-
-    //             // 2️ Vérifier si le séjour est terminé
-    //             if ($now->greaterThanOrEqualTo($end) && $reservation->is_present == true) {
-    //                 $this->releaseAppartement($reservation, "finished");
-    //                 $emailSubject = "✅ Séjour terminé";
-    //                 $emailContent = view('mail.finishe_reservation', [
-    //                     'reservation' => $reservation
-    //                 ])->render();
-
-    //                 $emailData = [
-    //                     'title' => 'Merci pour votre séjour - MOKAZ',
-    //                     'message' => $emailContent,
-    //                     'status' => $reservation->status,
-    //                     'code' => $reservation->code,
-    //                     'url' => url('/detail/appartement/' . $reservation->appartement->uuid),
-    //                     'buttonText' => "Noter l'hébergement",
-    //                 ];
-
-    //                 Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
-    //                 Log::info('Reservation auto remise: Séjour terminé ');
-    //                 $results[] = [
-    //                     'reservation' => $reservation->code,
-    //                     'status' => 'completed',
-    //                     'message' => 'Séjour terminé'
-    //                 ];
-    //                 continue;
-    //             }
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => count($results) > 0
-    //                 ? "Certaines réservations ont été mises à jour"
-    //                 : "Aucune réservation à libérer",
-    //             'details' => $results
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Reservation auto remise failed: ' . $e->getMessage());
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => "Erreur lors de la remise automatique",
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
     public function autoRemiseReservation()
     {
         DB::beginTransaction();

@@ -26,10 +26,10 @@
 </style>
 
 <div class="container-fluid bg-light min-vh-100">
-    <div class="row pt-4">
+    <div class="row pt-5">
         
         {{-- COL 8 : LISTE DES APPARTEMENTS --}}
-        <div class="col-lg-8">
+        <div class="col-lg-8 py-3">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold text-dark">Unités disponibles</h4>
                 <span class="badge bg-white text-dark shadow-sm border px-3 py-2">
@@ -58,7 +58,7 @@
                                         
                                     @endif
                                     <span class="position-absolute top-0 end-0 m-2 badge bg-dark opacity-75">
-                                        <i class="fas fa-door-open me-1"></i> {{ $appart->nbr_available }} dispos
+                                        <i class="fas fa-door-open me-1"></i> {{ $appart->nbr_available }} disponible{{ $appart->nbr_available > 1 ? 's' : '' }}
                                     </span>
                                 </div>
 
@@ -71,8 +71,8 @@
                                     </div>
 
                                     <div class="d-flex gap-3 mb-3 pb-2 border-bottom">
-                                        <span class="text-xs text-secondary"><i class="fas fa-bed"></i> {{ $appart->nbr_room }} Ch.</span>
-                                        <span class="text-xs text-secondary"><i class="fas fa-bath"></i> {{ $appart->nbr_bathroom }} SdB</span>
+                                        <span class="text-xs text-secondary"><i class="fas fa-bed"></i> {{ $appart->nbr_room }} Chambres</span>
+                                        <span class="text-xs text-secondary"><i class="fas fa-bath"></i> {{ $appart->nbr_bathroom }} Salles de bains</span>
                                     </div>
 
                                     {{-- SECTION PRIX --}}
@@ -95,7 +95,7 @@
                                             </div>
                                         </div>
 
-                                        <a class="btn btn-primary w-100 mt-3 fw-bold btn-sm btn-recondui" 
+                                        <a class="tf-btn btn btn-outline-dark w-100 mt-3 py-2 fw-bold btn-sm btn-recondui" 
                                         href="{{ route('reconduction.show', ['uuid' => $appart->uuid,'reservation_uuid' => $reservation->uuid]) }}">Choisir cet appartement</a>
 
                                         {{-- <button class="btn btn-primary w-100 mt-3 fw-bold btn-sm btn-reconduire"
@@ -116,6 +116,9 @@
                             <p class="text-muted">Aucun appartement disponible pour le moment.</p>
                         </div>
                     @endforelse
+                </div>
+                <div class="nav-pagination pt-4">
+                    {{ $apparts->withQueryString()->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         </div>
@@ -147,8 +150,8 @@
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="text-xs text-muted">Statut</span>
-                            @if($reservation->statut_paiement === 'paid')
-                                <span class="badge bg-success-soft text-success border border-success px-2 py-1" style="font-size: 0.65rem;">PAYÉ</span>
+                            @if($reservation->paiement->payment_status === 'paid')
+                                <span class="badge bg-success-soft text-success border border-success p-2" style="font-size: 0.65rem;">PAYÉ</span>
                             @else
                                 <span class="badge bg-danger-soft text-danger border border-danger px-2 py-1" style="font-size: 0.65rem;">EN ATTENTE</span>
                             @endif

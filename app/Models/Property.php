@@ -69,6 +69,35 @@ class Property extends Model
         return $this->belongsTo(User::class, 'created_by', 'uuid');
     }
 
+    protected $appends = [
+        'country_name',
+        'city_name',
+        'district_name',
+        'address_name',
+    ];
+
+    // Attributs virtuels (accessors)
+
+    public function getCountryNameAttribute()
+    {
+        return $this->attributes['country_name'] ?? null;
+    }
+
+    public function getCityNameAttribute()
+    {
+        return $this->attributes['city_name'] ?? null;
+    }
+
+    public function getDistrictNameAttribute()
+    {
+        return $this->attributes['district_name'] ?? null;
+    }
+
+    public function getAddressNameAttribute()
+    {
+        return $this->attributes['address_name'] ?? null;
+    }
+
 
 
 }
