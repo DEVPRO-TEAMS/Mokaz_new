@@ -184,6 +184,143 @@ class SettingController extends Controller
         return response()->json($dataResponse);
     }
 
+    // public function faq()
+    // {
+    //     $externalUploadDir = base_path(env('STORAGE_FILES', '../uploads/'));
+    //     $externalDir = $externalUploadDir . 'FAQ/';
+    //     $reservationFileUrls = [];
+    //     $propertyFileUrls = [];
+    //     $appartFileUrls = [];
+    //     $paramettreFileUrls = [];
+
+    //     // recuperer tous les fichiers mp4 de chaque dossier
+    //     $reservationFiles = glob($externalDir . DIRECTORY_SEPARATOR . 'reservation' . DIRECTORY_SEPARATOR . '*.mp4');
+    //     $propertyFiles = glob($externalDir . DIRECTORY_SEPARATOR . 'property' . DIRECTORY_SEPARATOR . '*.mp4');
+    //     $appartFiles = glob($externalDir . DIRECTORY_SEPARATOR . 'appart' . DIRECTORY_SEPARATOR . '*.mp4');
+    //     $paramettresFiles = glob($externalDir . DIRECTORY_SEPARATOR . 'Paramettres' . DIRECTORY_SEPARATOR . '*.mp4');
+
+    //     // recuperer les fichiers mp4 expliquant le module de reservation
+    //     if (!empty($reservationFiles)) {
+    //         foreach ($reservationFiles as $file) {
+    //             $fileName = basename($file);
+    //             $fileUrl = url('storage/files/' . $reservationFiles . DIRECTORY_SEPARATOR . $fileName);
+    //             $reservationFileUrls[] = $fileUrl;
+    //             $reservationFileUrls[] = $fileName;
+    //         }
+    //     }
+
+    //     // recuperer les fichiers mp4 expliquant le module gestion des property
+    //     if (!empty($propertyFiles)) {
+    //         foreach ($propertyFiles as $file) {
+    //             $fileName = basename($file);
+    //             $fileUrl = url('storage/files/' . $propertyFiles . DIRECTORY_SEPARATOR . $fileName);
+    //             $propertyFileUrls[] = $fileUrl;
+    //             $propertyFileUrls[] = $fileName;
+    //         }
+    //     }
+
+    //     // recuperer les fichiers mp4 expliquant le module gestion des hebergement
+    //     if (!empty($appartFiles)) {
+    //         foreach ($appartFiles as $file) {
+    //             $fileName = basename($file);
+    //             $fileUrl = url('storage/files/' . $appartFiles . DIRECTORY_SEPARATOR . $fileName);
+    //             $appartFileUrls[] = $fileUrl;
+    //             $appartFileUrls[] = $fileName;
+    //         }
+    //     }
+
+    //     // recuperer les fichiers mp4 expliquant le module gestion des parametres
+    //     if (!empty($paramettresFiles)) {
+    //         foreach ($paramettresFiles as $file) {
+    //             $fileName = basename($file);
+    //             $fileUrl = url('storage/files/' . $paramettresFiles . DIRECTORY_SEPARATOR . $fileName);
+    //             $paramettreFileUrls[] = $fileUrl;
+    //             $paramettreFileUrls[] = $fileName;
+    //         }
+    //     }
+
+    //     dd($reservationFileUrls, $propertyFileUrls, $appartFileUrls, $paramettreFileUrls);
+    //     return view('partners.pages.faq', compact('reservationFileUrls', 'propertyFileUrls', 'appartFileUrls', 'paramettreFileUrls'));
+    // }
+
+    public function faq()
+{
+    $externalUploadDir = base_path(env('STORAGE_FILES', '../uploads/'));
+    $externalDir = $externalUploadDir . 'FAQ/';
+
+    $reservationFileUrls = [];
+    $propertyFileUrls = [];
+    $appartFileUrls = [];
+    $paramettreFileUrls = [];
+
+    // Récupération des fichiers
+    $reservationFiles = glob($externalDir . 'reservation/*.mp4');
+    $propertyFiles = glob($externalDir . 'property/*.mp4');
+    $appartFiles = glob($externalDir . 'appart/*.mp4');
+    $paramettresFiles = glob($externalDir . 'Paramettres/*.mp4');
+
+    // Reservation
+    if ($reservationFiles) {
+        foreach ($reservationFiles as $file) {
+            $fileName = basename($file);
+            $fileUrl = url('storage/files/FAQ/reservation/' . $fileName);
+
+            $reservationFileUrls[] = [
+                'name' => $fileName,
+                'url'  => $fileUrl
+            ];
+        }
+    }
+
+    // Property
+    if ($propertyFiles) {
+        foreach ($propertyFiles as $file) {
+            $fileName = basename($file);
+            $fileUrl = url('storage/files/FAQ/property/' . $fileName);
+
+            $propertyFileUrls[] = [
+                'name' => $fileName,
+                'url'  => $fileUrl
+            ];
+        }
+    }
+
+    // Appart
+    if ($appartFiles) {
+        foreach ($appartFiles as $file) {
+            $fileName = basename($file);
+            $fileUrl = url('storage/files/FAQ/appart/' . $fileName);
+
+            $appartFileUrls[] = [
+                'name' => $fileName,
+                'url'  => $fileUrl
+            ];
+        }
+    }
+
+    // Parametres
+    if ($paramettresFiles) {
+        foreach ($paramettresFiles as $file) {
+            $fileName = basename($file);
+            $fileUrl = url('storage/files/FAQ/Paramettres/' . $fileName);
+
+            $paramettreFileUrls[] = [
+                'name' => $fileName,
+                'url'  => $fileUrl
+            ];
+        }
+    }
+    // dd($reservationFileUrls, $propertyFileUrls, $appartFileUrls, $paramettreFileUrls);
+
+    return view('partners.pages.faq', compact(
+        'reservationFileUrls',
+        'propertyFileUrls',
+        'appartFileUrls',
+        'paramettreFileUrls'
+    ));
+}
+
+
     // End Commodity
 
 

@@ -222,6 +222,14 @@
                                 <span class="badge bg-danger ms-auto">{{ Auth::user()->user_type == 'admin' ? $comments->where('etat', 'pending')->count() : $comments->where('etat', 'pending')->where('partner_uuid', Auth::user()->partner_uuid)->count() }}</span>
                             </a>
                         </li>
+                        <li class="nav-item mb-1">
+                            <a class="nav-link {{ Route::currentRouteName() == 'setting.faq' ? 'active' : ''}} d-flex align-items-center py-2 px-3 rounded text-dark" 
+                            href="{{ route('setting.faq') }}">
+                                <i class="bi bi-chat-left me-3 fs-5"></i>
+                                <span>FAQ </span>
+                                
+                            </a>
+                        </li>
                         <!-- Partenaires (Admin seulement) -->
                         @if (Auth::user()->user_type == 'admin')
                         <li class="nav-item mb-1">

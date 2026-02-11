@@ -210,6 +210,9 @@ Route::prefix('setting')->name('setting.')->group(function () {
         Route::post('/variable/update/{uuid}', [SettingController::class, 'updateVariable'])->name('updateVariable');
         Route::post('/variable/destroy/{uuid}', [SettingController::class, 'destroyVariable'])->name('destroyVariable');
 
+
+        Route::get('/faq', [SettingController::class, 'faq'])->name('faq');
+
         // type de variable
 
     });
