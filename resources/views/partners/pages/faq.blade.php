@@ -15,173 +15,43 @@
         <p class="text-muted fs-5">Vidéos tutoriels pour vous accompagner dans l'utilisation de la plateforme</p>
     </div>
 
-    <!-- Modules Grid -->
+   
+
     <div class="row g-4">
 
-    {{-- ================= MODULE RÉSERVATION ================= --}}
-    <div class="col-12">
-        <div class="card border-0 shadow-sm hover-shadow">
-            <div class="card-header bg-gradient-primary text-white py-3">
-                <h3 class="mb-0 d-flex align-items-center">
-                    <i class="fas fa-calendar-check me-3 fs-4"></i>
-                    Module Réservation
-                </h3>
-            </div>
+        {{-- ================= MODULE RÉSERVATION ================= --}}
+        @include('partners.pages.partials.video-module', [
+            'title' => 'Module Réservation',
+            'icon'  => 'fa-calendar-check',
+            'color' => 'primary',
+            'videos' => $reservationFileUrls
+        ])
 
-            <div class="card-body p-4">
-                @if(!empty($reservationFileUrls))
-                    <div class="row g-4">
-                        @foreach($reservationFileUrls as $video)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="video-card">
-                                    <div class="video-wrapper rounded overflow-hidden shadow-sm mb-3">
-                                        <video class="w-100" controls preload="metadata">
-                                            <source src="{{ $video['url'] }}" type="video/mp4">
-                                            Votre navigateur ne supporte pas la lecture de vidéos.
-                                        </video>
-                                    </div>
-                                    <h5 class="video-title text-dark mb-2">
-                                        <i class="fas fa-play-circle text-primary me-2"></i>
-                                        {{ pathinfo($video['name'], PATHINFO_FILENAME) }}
-                                    </h5>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-video-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                        <p class="text-muted mb-0">Aucune vidéo disponible pour le module Réservation.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
+        {{-- ================= MODULE PROPERTIES ================= --}}
+        @include('partners.pages.partials.video-module', [
+            'title' => 'Module Gestion des Propriétés',
+            'icon'  => 'fa-building',
+            'color' => 'success',
+            'videos' => $propertyFileUrls
+        ])
+
+        {{-- ================= MODULE HÉBERGEMENTS ================= --}}
+        @include('partners.pages.partials.video-module', [
+            'title' => 'Module Gestion des Hébergements',
+            'icon'  => 'fa-home',
+            'color' => 'info',
+            'videos' => $appartFileUrls
+        ])
+
+        {{-- ================= MODULE PARAMÈTRES ================= --}}
+        @include('partners.pages.partials.video-module', [
+            'title' => 'Module Gestion des Paramètres',
+            'icon'  => 'fa-cog',
+            'color' => 'warning',
+            'videos' => $paramettreFileUrls
+        ])
+
     </div>
-
-
-    {{-- ================= MODULE PROPERTIES ================= --}}
-    <div class="col-12">
-        <div class="card border-0 shadow-sm hover-shadow">
-            <div class="card-header bg-gradient-success text-white py-3">
-                <h3 class="mb-0 d-flex align-items-center">
-                    <i class="fas fa-building me-3 fs-4"></i>
-                    Module Gestion des Propriétés
-                </h3>
-            </div>
-
-            <div class="card-body p-4">
-                @if(!empty($propertyFileUrls))
-                    <div class="row g-4">
-                        @foreach($propertyFileUrls as $video)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="video-card">
-                                    <div class="video-wrapper rounded overflow-hidden shadow-sm mb-3">
-                                        <video class="w-100" controls preload="metadata">
-                                            <source src="{{ $video['url'] }}" type="video/mp4">
-                                            Votre navigateur ne supporte pas la lecture de vidéos.
-                                        </video>
-                                    </div>
-                                    <h5 class="video-title text-dark mb-2">
-                                        <i class="fas fa-play-circle text-success me-2"></i>
-                                        {{ pathinfo($video['name'], PATHINFO_FILENAME) }}
-                                    </h5>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-video-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                        <p class="text-muted mb-0">Aucune vidéo disponible pour le module Gestion des propriétés.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-
-    {{-- ================= MODULE HÉBERGEMENTS ================= --}}
-    <div class="col-12">
-        <div class="card border-0 shadow-sm hover-shadow">
-            <div class="card-header bg-gradient-info text-white py-3">
-                <h3 class="mb-0 d-flex align-items-center">
-                    <i class="fas fa-home me-3 fs-4"></i>
-                    Module Gestion des Hébergements
-                </h3>
-            </div>
-
-            <div class="card-body p-4">
-                @if(!empty($appartFileUrls))
-                    <div class="row g-4">
-                        @foreach($appartFileUrls as $video)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="video-card">
-                                    <div class="video-wrapper rounded overflow-hidden shadow-sm mb-3">
-                                        <video class="w-100" controls preload="metadata">
-                                            <source src="{{ $video['url'] }}" type="video/mp4">
-                                            Votre navigateur ne supporte pas la lecture de vidéos.
-                                        </video>
-                                    </div>
-                                    <h5 class="video-title text-dark mb-2">
-                                        <i class="fas fa-play-circle text-info me-2"></i>
-                                        {{ pathinfo($video['name'], PATHINFO_FILENAME) }}
-                                    </h5>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-video-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                        <p class="text-muted mb-0">Aucune vidéo disponible pour le module Gestion des hébergements.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-
-    {{-- ================= MODULE PARAMÈTRES ================= --}}
-    <div class="col-12">
-        <div class="card border-0 shadow-sm hover-shadow">
-            <div class="card-header bg-gradient-warning text-white py-3">
-                <h3 class="mb-0 d-flex align-items-center">
-                    <i class="fas fa-cog me-3 fs-4"></i>
-                    Module Gestion des Paramètres
-                </h3>
-            </div>
-
-            <div class="card-body p-4">
-                @if(!empty($paramettreFileUrls))
-                    <div class="row g-4">
-                        @foreach($paramettreFileUrls as $video)
-                            <div class="col-md-6 col-lg-4">
-                                <div class="video-card">
-                                    <div class="video-wrapper rounded overflow-hidden shadow-sm mb-3">
-                                        <video class="w-100" controls preload="metadata">
-                                            <source src="{{ $video['url'] }}" type="video/mp4">
-                                            Votre navigateur ne supporte pas la lecture de vidéos.
-                                        </video>
-                                    </div>
-                                    <h5 class="video-title text-dark mb-2">
-                                        <i class="fas fa-play-circle text-warning me-2"></i>
-                                        {{ pathinfo($video['name'], PATHINFO_FILENAME) }}
-                                    </h5>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <i class="fas fa-video-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                        <p class="text-muted mb-0">Aucune vidéo disponible pour le module Gestion des paramètres.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-</div>
 
 
     <!-- Help Footer -->

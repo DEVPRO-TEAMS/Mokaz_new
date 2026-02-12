@@ -243,81 +243,224 @@ class SettingController extends Controller
     //     return view('partners.pages.faq', compact('reservationFileUrls', 'propertyFileUrls', 'appartFileUrls', 'paramettreFileUrls'));
     // }
 
+//     public function faq()
+// {
+//     $externalUploadDir = base_path(env('STORAGE_FILES', '../uploads/'));
+//     $externalDir = $externalUploadDir . 'FAQ/';
+
+//     $reservationFileUrls = [];
+//     $propertyFileUrls = [];
+//     $appartFileUrls = [];
+//     $paramettreFileUrls = [];
+
+//     // Récupération des fichiers
+//     $reservationFiles = glob($externalDir . 'reservation/*.mp4');
+//     $propertyFiles = glob($externalDir . 'property/*.mp4');
+//     $appartFiles = glob($externalDir . 'appart/*.mp4');
+//     $paramettresFiles = glob($externalDir . 'Paramettres/*.mp4');
+
+//     // Reservation
+//     if ($reservationFiles) {
+//         foreach ($reservationFiles as $file) {
+//             $fileName = basename($file);
+//             $fileUrl = url('storage/files/FAQ/reservation/' . $fileName);
+
+//             $reservationFileUrls[] = [
+//                 'name' => $fileName,
+//                 'url'  => $fileUrl
+//             ];
+//         }
+//     }
+
+//     // Property
+//     if ($propertyFiles) {
+//         foreach ($propertyFiles as $file) {
+//             $fileName = basename($file);
+//             $fileUrl = url('storage/files/FAQ/property/' . $fileName);
+
+//             $propertyFileUrls[] = [
+//                 'name' => $fileName,
+//                 'url'  => $fileUrl
+//             ];
+//         }
+//     }
+
+//     // Appart
+//     if ($appartFiles) {
+//         foreach ($appartFiles as $file) {
+//             $fileName = basename($file);
+//             $fileUrl = url('storage/files/FAQ/appart/' . $fileName);
+
+//             $appartFileUrls[] = [
+//                 'name' => $fileName,
+//                 'url'  => $fileUrl
+//             ];
+//         }
+//     }
+
+//     // Parametres
+//     if ($paramettresFiles) {
+//         foreach ($paramettresFiles as $file) {
+//             $fileName = basename($file);
+//             $fileUrl = url('storage/files/FAQ/Paramettres/' . $fileName);
+
+//             $paramettreFileUrls[] = [
+//                 'name' => $fileName,
+//                 'url'  => $fileUrl
+//             ];
+//         }
+//     }
+//     // dd($reservationFileUrls, $propertyFileUrls, $appartFileUrls, $paramettreFileUrls);
+
+//     return view('partners.pages.faq', compact(
+//         'reservationFileUrls',
+//         'propertyFileUrls',
+//         'appartFileUrls',
+//         'paramettreFileUrls'
+//     ));
+// }
+
     public function faq()
+    {
+        $externalUploadDir = base_path(env('STORAGE_FILES'));
+        $externalDir = $externalUploadDir . 'FAQ/';
+
+        $modules = [
+            'reservation'  => 'reservation',
+            'property'     => 'property',
+            'appart'       => 'appart',
+            'Paramettres'  => 'Paramettres',
+        ];
+
+        $videos = [];
+
+        foreach ($modules as $key => $folder) {
+
+            $files = glob($externalDir . $folder . '/*.mp4');
+
+            $videos[$key] = [];
+
+            if ($files) {
+                foreach ($files as $file) {
+
+                    $fileName = basename($file);
+
+                    $videos[$key][] = [
+                        'name' => $fileName,
+                        'url'  => route('setting.faq.video', [
+                            'module' => $folder,
+                            'file'   => $fileName
+                        ])
+                    ];
+                }
+            }
+        }
+
+        return view('partners.pages.faq', [
+            'reservationFileUrls' => $videos['reservation'],
+            'propertyFileUrls'    => $videos['property'],
+            'appartFileUrls'      => $videos['appart'],
+            'paramettreFileUrls'  => $videos['Paramettres'],
+        ]);
+    }
+
+
+    // public function streamVideo($module, $file)
+    // {
+    //     $basePath = base_path(env('STORAGE_FILES')) . 'FAQ/';
+    //     $path = $basePath . $module . '/' . $file;
+
+    //     if (!file_exists($path)) {
+    //         abort(404);
+    //     }
+
+    //     $size   = filesize($path);
+    //     $start  = 0;
+    //     $length = $size;
+
+    //     header('Content-Type: video/mp4');
+    //     header('Accept-Ranges: bytes');
+
+    //     if (isset($_SERVER['HTTP_RANGE'])) {
+
+    //         preg_match('/bytes=(\d+)-(\d*)/', $_SERVER['HTTP_RANGE'], $matches);
+
+    //         $start = intval($matches[1]);
+
+    //         if (!empty($matches[2])) {
+    //             $end = intval($matches[2]);
+    //             $length = $end - $start + 1;
+    //         } else {
+    //             $length = $size - $start;
+    //         }
+
+    //         header("HTTP/1.1 206 Partial Content");
+    //         header("Content-Range: bytes $start-" . ($start + $length - 1) . "/$size");
+    //     }
+
+    //     header("Content-Length: $length");
+
+    //     $file = fopen($path, 'rb');
+    //     fseek($file, $start);
+
+    //     echo fread($file, $length);
+    //     fclose($file);
+
+    //     exit;
+    // }
+
+    public function streamVideo($module, $file)
 {
-    $externalUploadDir = base_path(env('STORAGE_FILES', '../uploads/'));
-    $externalDir = $externalUploadDir . 'FAQ/';
+    $basePath = base_path(env('STORAGE_FILES')) . 'FAQ/';
+    $path = $basePath . $module . '/' . $file;
 
-    $reservationFileUrls = [];
-    $propertyFileUrls = [];
-    $appartFileUrls = [];
-    $paramettreFileUrls = [];
-
-    // Récupération des fichiers
-    $reservationFiles = glob($externalDir . 'reservation/*.mp4');
-    $propertyFiles = glob($externalDir . 'property/*.mp4');
-    $appartFiles = glob($externalDir . 'appart/*.mp4');
-    $paramettresFiles = glob($externalDir . 'Paramettres/*.mp4');
-
-    // Reservation
-    if ($reservationFiles) {
-        foreach ($reservationFiles as $file) {
-            $fileName = basename($file);
-            $fileUrl = url('storage/files/FAQ/reservation/' . $fileName);
-
-            $reservationFileUrls[] = [
-                'name' => $fileName,
-                'url'  => $fileUrl
-            ];
-        }
+    if (!file_exists($path)) {
+        abort(404);
     }
 
-    // Property
-    if ($propertyFiles) {
-        foreach ($propertyFiles as $file) {
-            $fileName = basename($file);
-            $fileUrl = url('storage/files/FAQ/property/' . $fileName);
+    $size   = filesize($path);
+    $start  = 0;
+    $end    = $size - 1;
 
-            $propertyFileUrls[] = [
-                'name' => $fileName,
-                'url'  => $fileUrl
-            ];
+    header('Content-Type: video/mp4');
+    header('Accept-Ranges: bytes');
+
+    if (isset($_SERVER['HTTP_RANGE'])) {
+
+        if (preg_match('/bytes=(\d+)-(\d*)/', $_SERVER['HTTP_RANGE'], $matches)) {
+
+            $start = intval($matches[1]);
+
+            if (!empty($matches[2])) {
+                $end = intval($matches[2]);
+            }
         }
+
+        header("HTTP/1.1 206 Partial Content");
+        header("Content-Range: bytes $start-$end/$size");
     }
 
-    // Appart
-    if ($appartFiles) {
-        foreach ($appartFiles as $file) {
-            $fileName = basename($file);
-            $fileUrl = url('storage/files/FAQ/appart/' . $fileName);
+    $length = $end - $start + 1;
 
-            $appartFileUrls[] = [
-                'name' => $fileName,
-                'url'  => $fileUrl
-            ];
+    header("Content-Length: $length");
+
+    $handle = fopen($path, 'rb');
+    fseek($handle, $start);
+
+    $chunkSize = 8192; // 8KB par lecture
+
+    while (!feof($handle) && ($pos = ftell($handle)) <= $end) {
+
+        if ($pos + $chunkSize > $end) {
+            $chunkSize = $end - $pos + 1;
         }
+
+        echo fread($handle, $chunkSize);
+        flush();
     }
 
-    // Parametres
-    if ($paramettresFiles) {
-        foreach ($paramettresFiles as $file) {
-            $fileName = basename($file);
-            $fileUrl = url('storage/files/FAQ/Paramettres/' . $fileName);
-
-            $paramettreFileUrls[] = [
-                'name' => $fileName,
-                'url'  => $fileUrl
-            ];
-        }
-    }
-    // dd($reservationFileUrls, $propertyFileUrls, $appartFileUrls, $paramettreFileUrls);
-
-    return view('partners.pages.faq', compact(
-        'reservationFileUrls',
-        'propertyFileUrls',
-        'appartFileUrls',
-        'paramettreFileUrls'
-    ));
+    fclose($handle);
+    exit;
 }
 
 

@@ -212,6 +212,9 @@ Route::prefix('setting')->name('setting.')->group(function () {
 
 
         Route::get('/faq', [SettingController::class, 'faq'])->name('faq');
+        Route::get('/partners/faq/video/{module}/{file}', [SettingController::class, 'streamVideo'])
+        ->where('file', '.*')
+        ->name('faq.video');
 
         // type de variable
 
