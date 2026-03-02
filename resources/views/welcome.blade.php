@@ -219,7 +219,7 @@
         }
     @endphp
     <!-- Recommended -->
-    {{-- <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
+    <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
         <div class="container">
             <div class="box-title style-2 text-center wow fadeInUpSmall" data-wow-delay=".2s" data-wow-duration="2000ms">
                 <h5 class="mt-4">Découvrez les meilleures propriétés pour un séjour de rêve</h5>
@@ -368,10 +368,10 @@
                 
             @endif
         </div>
-    </section> --}}
+    </section>
 
     <!-- Recommended -->
-    <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
+    {{-- <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
         <div class="container">
             <div class="box-title style-2 text-center wow fadeInUpSmall" data-wow-delay=".2s" data-wow-duration="2000ms">
                 <h5 class="mt-4">Découvrez les meilleures propriétés pour un séjour de rêve</h5>
@@ -396,7 +396,7 @@
                 </div>
             @endif
         </div>
-    </section>
+    </section> --}}
     <!-- End Recommended -->
     <!-- End Recommended -->
 
@@ -671,7 +671,7 @@
         </div>
     </section>
 
-    {{-- <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const latInput = document.getElementById('user_lat');
             const lngInput = document.getElementById('user_lng');
@@ -718,308 +718,308 @@
                 }
             }
         });
-    </script> --}}
+    </script>
 
-    <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('searchAppartsForm');
-    const resultsContainer = document.querySelector('.row.wow.fadeInUpSmall');
-    const paginationContainer = document.querySelector('.nav-pagination.pt-4');
-    const latInput = document.getElementById('user_lat');
-    const lngInput = document.getElementById('user_lng');
-    let isSubmitting = false;
+    {{-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('searchAppartsForm');
+            const resultsContainer = document.querySelector('.row.wow.fadeInUpSmall');
+            const paginationContainer = document.querySelector('.nav-pagination.pt-4');
+            const latInput = document.getElementById('user_lat');
+            const lngInput = document.getElementById('user_lng');
+            let isSubmitting = false;
 
-    // Fonction pour soumettre le formulaire en AJAX
-    function submitForm(page = 1) {
-        if (isSubmitting) return;
-        isSubmitting = true;
+            // Fonction pour soumettre le formulaire en AJAX
+            function submitForm(page = 1) {
+                if (isSubmitting) return;
+                isSubmitting = true;
 
-        // Afficher un loader
-        showLoader();
+                // Afficher un loader
+                showLoader();
 
-        // Récupérer les données du formulaire
-        const formData = new FormData(form);
-        
-        // Ajouter la page si spécifiée
-        if (page > 1) {
-            formData.set('page', page);
-        }
+                // Récupérer les données du formulaire
+                const formData = new FormData(form);
+                
+                // Ajouter la page si spécifiée
+                if (page > 1) {
+                    formData.set('page', page);
+                }
 
-        // Convertir FormData en objet pour une utilisation avec $.param ou URLSearchParams
-        const params = new URLSearchParams();
-        for (let [key, value] of formData.entries()) {
-            if (value) {
-                if (key === 'commodities[]') {
-                    params.append('commodities[]', value);
-                } else {
-                    params.set(key, value);
+                // Convertir FormData en objet pour une utilisation avec $.param ou URLSearchParams
+                const params = new URLSearchParams();
+                for (let [key, value] of formData.entries()) {
+                    if (value) {
+                        if (key === 'commodities[]') {
+                            params.append('commodities[]', value);
+                        } else {
+                            params.set(key, value);
+                        }
+                    }
+                }
+
+                // Effectuer la requête AJAX
+                fetch(`/api/appartements/search?${params.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Mettre à jour le DOM avec les nouveaux résultats
+                    updateResults(data);
+                    
+                    // Mettre à jour l'URL sans recharger la page
+                    updateURL(params);
+                    
+                    // Initialiser les nouveaux éléments (comme les tooltips, etc.)
+                    initializeComponents();
+                    
+                    isSubmitting = false;
+                    hideLoader();
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    isSubmitting = false;
+                    hideLoader();
+                    showError('Une erreur est survenue lors de la recherche');
+                });
+            }
+
+            // Fonction pour mettre à jour les résultats
+            function updateResults(data) {
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = data.html;
+                }
+                if (paginationContainer && data.pagination) {
+                    paginationContainer.innerHTML = data.pagination;
+                }
+                
+                // Mettre à jour le compteur de résultats si présent
+                const resultCount = document.querySelector('.result-count');
+                if (resultCount && data.count !== undefined) {
+                    resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
                 }
             }
-        }
 
-        // Effectuer la requête AJAX
-        fetch(`/api/appartements/search?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
+            // Fonction pour mettre à jour l'URL sans recharger
+            function updateURL(params) {
+                const newUrl = window.location.pathname + '?' + params.toString();
+                window.history.pushState({ path: newUrl }, '', newUrl);
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Mettre à jour le DOM avec les nouveaux résultats
-            updateResults(data);
-            
-            // Mettre à jour l'URL sans recharger la page
-            updateURL(params);
-            
-            // Initialiser les nouveaux éléments (comme les tooltips, etc.)
-            initializeComponents();
-            
-            isSubmitting = false;
-            hideLoader();
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            isSubmitting = false;
-            hideLoader();
-            showError('Une erreur est survenue lors de la recherche');
-        });
-    }
 
-    // Fonction pour mettre à jour les résultats
-    function updateResults(data) {
-        if (resultsContainer) {
-            resultsContainer.innerHTML = data.html;
-        }
-        if (paginationContainer && data.pagination) {
-            paginationContainer.innerHTML = data.pagination;
-        }
-        
-        // Mettre à jour le compteur de résultats si présent
-        const resultCount = document.querySelector('.result-count');
-        if (resultCount && data.count !== undefined) {
-            resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
-        }
-    }
-
-    // Fonction pour mettre à jour l'URL sans recharger
-    function updateURL(params) {
-        const newUrl = window.location.pathname + '?' + params.toString();
-        window.history.pushState({ path: newUrl }, '', newUrl);
-    }
-
-    // Fonction pour afficher un loader
-    function showLoader() {
-        if (resultsContainer) {
-            resultsContainer.style.opacity = '0.6';
-            resultsContainer.style.transition = 'opacity 0.3s';
-            
-            // Ajouter un loader si nécessaire
-            const loader = document.createElement('div');
-            loader.className = 'text-center py-4';
-            loader.id = 'searchLoader';
-            loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement...</span></div>';
-            
-            if (!document.getElementById('searchLoader')) {
-                resultsContainer.parentNode.insertBefore(loader, resultsContainer);
+            // Fonction pour afficher un loader
+            function showLoader() {
+                if (resultsContainer) {
+                    resultsContainer.style.opacity = '0.6';
+                    resultsContainer.style.transition = 'opacity 0.3s';
+                    
+                    // Ajouter un loader si nécessaire
+                    const loader = document.createElement('div');
+                    loader.className = 'text-center py-4';
+                    loader.id = 'searchLoader';
+                    loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement...</span></div>';
+                    
+                    if (!document.getElementById('searchLoader')) {
+                        resultsContainer.parentNode.insertBefore(loader, resultsContainer);
+                    }
+                }
             }
-        }
-    }
 
-    // Fonction pour cacher le loader
-    function hideLoader() {
-        if (resultsContainer) {
-            resultsContainer.style.opacity = '1';
-        }
-        const loader = document.getElementById('searchLoader');
-        if (loader) {
-            loader.remove();
-        }
-    }
+            // Fonction pour cacher le loader
+            function hideLoader() {
+                if (resultsContainer) {
+                    resultsContainer.style.opacity = '1';
+                }
+                const loader = document.getElementById('searchLoader');
+                if (loader) {
+                    loader.remove();
+                }
+            }
 
-    // Fonction pour afficher une erreur
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-        errorDiv.role = 'alert';
-        errorDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        if (resultsContainer) {
-            resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
-            
-            // Auto-fermeture après 5 secondes
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
-        }
-    }
+            // Fonction pour afficher une erreur
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+                errorDiv.role = 'alert';
+                errorDiv.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                
+                if (resultsContainer) {
+                    resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
+                    
+                    // Auto-fermeture après 5 secondes
+                    setTimeout(() => {
+                        errorDiv.remove();
+                    }, 5000);
+                }
+            }
 
-    // Fonction pour initialiser les composants après mise à jour
-    function initializeComponents() {
-        // Réinitialiser les tooltips Bootstrap
-        if (typeof bootstrap !== 'undefined') {
-            const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-            tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
-        }
+            // Fonction pour initialiser les composants après mise à jour
+            function initializeComponents() {
+                // Réinitialiser les tooltips Bootstrap
+                if (typeof bootstrap !== 'undefined') {
+                    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+                }
 
-        // Réinitialiser les sliders de prix si nécessaire
-        if (typeof initPriceSlider === 'function') {
-            initPriceSlider();
-        }
+                // Réinitialiser les sliders de prix si nécessaire
+                if (typeof initPriceSlider === 'function') {
+                    initPriceSlider();
+                }
 
-        // Réinitialiser les selects stylisés
-        if (typeof NiceSelect !== 'undefined') {
-            NiceSelect.bind(document.querySelectorAll('.nice-select'));
-        }
-    }
+                // Réinitialiser les selects stylisés
+                if (typeof NiceSelect !== 'undefined') {
+                    NiceSelect.bind(document.querySelectorAll('.nice-select'));
+                }
+            }
 
-    // Géolocalisation
-    function handleGeolocation() {
-        if (!latInput.value || !lngInput.value) {
-            if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                };
+            // Géolocalisation
+            function handleGeolocation() {
+                if (!latInput.value || !lngInput.value) {
+                    if (navigator.geolocation) {
+                        const options = {
+                            enableHighAccuracy: true,
+                            timeout: 5000,
+                            maximumAge: 0
+                        };
 
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        latInput.value = position.coords.latitude;
-                        lngInput.value = position.coords.longitude;
-                        // Soumission automatique après géolocalisation
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                latInput.value = position.coords.latitude;
+                                lngInput.value = position.coords.longitude;
+                                // Soumission automatique après géolocalisation
+                                submitForm();
+                            }, 
+                            function(error) {
+                                console.warn("Erreur de géolocalisation:", error);
+                                // Soumettre sans géolocalisation
+                                submitForm();
+                            }, 
+                            options
+                        );
+                    } else {
+                        console.warn("Géolocalisation non supportée");
                         submitForm();
-                    }, 
-                    function(error) {
-                        console.warn("Erreur de géolocalisation:", error);
-                        // Soumettre sans géolocalisation
-                        submitForm();
-                    }, 
-                    options
-                );
-            } else {
-                console.warn("Géolocalisation non supportée");
-                submitForm();
-            }
-        } else {
-            // Si les coordonnées sont déjà présentes, soumettre directement
-            submitForm();
-        }
-    }
-
-    // Événement de soumission du formulaire
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleGeolocation();
-    });
-
-    // Écouter les changements sur les champs de filtre (optionnel)
-    const filterInputs = form.querySelectorAll('input:not([type="hidden"]), select');
-    filterInputs.forEach(input => {
-        if (input.type !== 'submit') {
-            input.addEventListener('change', function() {
-                // Debounce pour éviter trop de requêtes
-                clearTimeout(window.filterTimeout);
-                window.filterTimeout = setTimeout(() => {
+                    }
+                } else {
+                    // Si les coordonnées sont déjà présentes, soumettre directement
                     submitForm();
-                }, 500);
-            });
-        }
-    });
-
-    // Gestion de la pagination
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('.page-link') || e.target.closest('.page-link')) {
-            e.preventDefault();
-            const pageBtn = e.target.closest('.page-link');
-            const page = pageBtn.dataset.page;
-            
-            if (page) {
-                submitForm(page);
-            }
-        }
-    });
-
-    // Gestion du bouton de réinitialisation
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
-            e.preventDefault();
-            
-            // Réinitialiser tous les champs du formulaire
-            form.reset();
-            
-            // Réinitialiser les champs cachés
-            latInput.value = '';
-            lngInput.value = '';
-            
-            // Soumettre à nouveau
-            handleGeolocation();
-        }
-    });
-
-    // Gestion du bouton "Voir tous les biens"
-    const viewAllBtn = document.querySelector('a[href="{{ route('appart.all') }}"]');
-    if (viewAllBtn) {
-        viewAllBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            // Rediriger normalement car c'est une autre page
-            window.location.href = this.href;
-        });
-    }
-
-    // Initialisation au chargement de la page
-    // Si des paramètres sont présents dans l'URL, les appliquer
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.toString()) {
-        // Remplir le formulaire avec les paramètres de l'URL
-        for (let [key, value] of urlParams.entries()) {
-            const input = form.querySelector(`[name="${key}"]`);
-            if (input) {
-                if (input.type === 'checkbox') {
-                    input.checked = true;
-                } else {
-                    input.value = value;
                 }
             }
-        }
-    }
 
-    // // Gestion du bouton "Avancé"
-    // const advancedFilterBtn = document.querySelector('.filter-advanced');
-    // const advancedFilterSection = document.querySelector('.wd-search-form');
-    
-    // if (advancedFilterBtn && advancedFilterSection) {
-    //     advancedFilterBtn.addEventListener('click', function(e) {
-    //         e.preventDefault();
-    //         advancedFilterSection.classList.toggle('show');
-    //         this.classList.toggle('active');
-    //     });
-    // }
-});
+            // Événement de soumission du formulaire
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleGeolocation();
+            });
 
-// Fonctions utilitaires globales
-window.formatDistance = function(km) {
-    if (!km) return null;
-    const metres = km * 1000;
-    return metres >= 1000
-        ? km.toFixed(1).replace('.', ',') + ' km'
-        : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
-};
+            // Écouter les changements sur les champs de filtre (optionnel)
+            const filterInputs = form.querySelectorAll('input:not([type="hidden"]), select');
+            filterInputs.forEach(input => {
+                if (input.type !== 'submit') {
+                    input.addEventListener('change', function() {
+                        // Debounce pour éviter trop de requêtes
+                        clearTimeout(window.filterTimeout);
+                        window.filterTimeout = setTimeout(() => {
+                            submitForm();
+                        }, 500);
+                    });
+                }
+            });
 
-window.formatTemps = function(minutes) {
-    if (!minutes) return null;
-    if (minutes >= 60) {
-        const heures = Math.floor(minutes / 60);
-        const mins = Math.round(minutes % 60);
-        return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
-    }
-    return Math.round(minutes) + ' min';
-};
-</script>
+            // Gestion de la pagination
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.page-link') || e.target.closest('.page-link')) {
+                    e.preventDefault();
+                    const pageBtn = e.target.closest('.page-link');
+                    const page = pageBtn.dataset.page;
+                    
+                    if (page) {
+                        submitForm(page);
+                    }
+                }
+            });
+
+            // Gestion du bouton de réinitialisation
+            document.addEventListener('click', function(e) {
+                if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
+                    e.preventDefault();
+                    
+                    // Réinitialiser tous les champs du formulaire
+                    form.reset();
+                    
+                    // Réinitialiser les champs cachés
+                    latInput.value = '';
+                    lngInput.value = '';
+                    
+                    // Soumettre à nouveau
+                    handleGeolocation();
+                }
+            });
+
+            // Gestion du bouton "Voir tous les biens"
+            const viewAllBtn = document.querySelector('a[href="{{ route('appart.all') }}"]');
+            if (viewAllBtn) {
+                viewAllBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Rediriger normalement car c'est une autre page
+                    window.location.href = this.href;
+                });
+            }
+
+            // Initialisation au chargement de la page
+            // Si des paramètres sont présents dans l'URL, les appliquer
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.toString()) {
+                // Remplir le formulaire avec les paramètres de l'URL
+                for (let [key, value] of urlParams.entries()) {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = true;
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                }
+            }
+
+            // // Gestion du bouton "Avancé"
+            // const advancedFilterBtn = document.querySelector('.filter-advanced');
+            // const advancedFilterSection = document.querySelector('.wd-search-form');
+            
+            // if (advancedFilterBtn && advancedFilterSection) {
+            //     advancedFilterBtn.addEventListener('click', function(e) {
+            //         e.preventDefault();
+            //         advancedFilterSection.classList.toggle('show');
+            //         this.classList.toggle('active');
+            //     });
+            // }
+        });
+
+        // Fonctions utilitaires globales
+        window.formatDistance = function(km) {
+            if (!km) return null;
+            const metres = km * 1000;
+            return metres >= 1000
+                ? km.toFixed(1).replace('.', ',') + ' km'
+                : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
+        };
+
+        window.formatTemps = function(minutes) {
+            if (!minutes) return null;
+            if (minutes >= 60) {
+                const heures = Math.floor(minutes / 60);
+                const mins = Math.round(minutes % 60);
+                return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
+            }
+            return Math.round(minutes) + ' min';
+        };
+    </script> --}}
 
 <style>
 .wd-search-form {
