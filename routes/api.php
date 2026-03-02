@@ -93,6 +93,8 @@ Route::prefix('dashboard')->group(function () {
     Route::get('/geographic', [DashboardController::class, 'getGeographicData']);
 });
 
+Route::get('/appartements/search', [PagesController::class, 'search'])->name('api.appartements.search');
+
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

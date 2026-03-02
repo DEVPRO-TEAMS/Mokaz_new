@@ -114,13 +114,13 @@ class PagesController extends Controller
         // 🔹 Récupérer les appartements qui correspondent à TOUS les filtres
         $appartementIds = $searchQuery->pluck('appartement_uuid')->toArray();
 
-        
+
         // Requête de base : appartements actifs et disponibles
         $query = Appartement::with('property')
             ->where('appartements.etat', 'actif')
             ->where('appartements.nbr_available', '>', 0)
             ->whereIn('appartements.uuid', $appartementIds);
-        
+
         if ($request->filled('commodities')) {
             foreach ($request->commodities as $commodity) {
                 $query->where('appartements.commodities', 'LIKE', '%' . $commodity . '%');
@@ -203,7 +203,7 @@ class PagesController extends Controller
             }
         }
         // dd($apparts);
-    // dd($apparts);
+        // dd($apparts);
 
         $appartements = Appartement::where('etat', 'actif')
             ->where('nbr_available', '>', 0)->get();
@@ -213,7 +213,7 @@ class PagesController extends Controller
         $priceRange = Tarification::where('etat', 'actif')
             ->whereHas('appartement', function ($q) {
                 $q->where('etat', 'actif')
-                ->where('nbr_available', '>', 0);
+                    ->where('nbr_available', '>', 0);
             })
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
@@ -277,6 +277,171 @@ class PagesController extends Controller
         $categories = Variable::where(['type' => 'category_of_property', 'etat' => 'actif'])->get();
         $cities = city::where('country_code', 'CIV')->get();
         return view('welcome', compact('apparts', 'bestApparts', 'typeAppart', 'locations', 'testimonials', 'categories', 'cities', 'commodities', 'minPrice', 'maxPrice'));
+    }
+
+    public function search(Request $request)
+    {
+        // 📋 Récupération des types d'appartements actifs
+        $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
+
+        // ⚙️ Paramètres de pagination et de requête
+        $perPage = $request->get('perPage', 6);
+        $latitudeUser = $request->get('lat');
+        $longitudeUser = $request->get('lng');
+        $search = trim($request->input('search'));
+        $location = trim($request->input('location'));
+        $type = $request->input('type');
+        $ville = $request->input('ville');
+        $categorie = $request->input('categorie');
+        $rooms = $request->input('rooms');
+        $bathrooms = $request->input('bathrooms');
+        $sejour = $request->input('sejour');
+        $commodities = $request->input('commodities');
+        $min_price = "";
+        $max_price = "";
+
+        $isSearch = ($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities);
+
+        if ($isSearch) {
+            $min_price = $request->input('min_price');
+            $max_price = $request->input('max_price');
+        }
+
+        // créer une session pour stocker les latitudeUser et longitudeUser
+        session(['lat' => $latitudeUser, 'lng' => $longitudeUser]);
+
+        // Si l'utilisateur fait une recherche manuelle, on ignore la géolocalisation
+        $useGeolocation = !($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities || $min_price || $max_price);
+
+        // Requête de base : on récupère les appartements actifs via la table Search
+        $searchQuery = Search::query();
+
+        if ($search) {
+            $fulltextConditions = array_filter([$search]);
+            if (!empty($fulltextConditions)) {
+                $match = implode(' ', $fulltextConditions);
+                $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
+            }
+        }
+
+        // Filtres
+        if ($location) {
+            $searchQuery->where('query', 'like', "%$location%");
+        }
+        if ($ville) {
+            $searchQuery->where('query', 'like', "%$ville%");
+        }
+        if ($categorie) {
+            $searchQuery->where('query', 'like', "%$categorie%");
+        }
+        if ($type) {
+            $searchQuery->where('query', 'like', "%$type%");
+        }
+        if ($rooms) {
+            $searchQuery->where('query', 'like', "%$rooms%");
+        }
+        if ($bathrooms) {
+            $searchQuery->where('query', 'like', "%$bathrooms%");
+        }
+        if ($sejour) {
+            $searchQuery->where('query', 'like', "%$sejour%");
+        }
+
+        // 🔹 Récupérer les appartements qui correspondent à TOUS les filtres
+        $appartementIds = $searchQuery->pluck('appartement_uuid')->toArray();
+
+        // Requête de base : appartements actifs et disponibles
+        $query = Appartement::with('property')
+            ->where('appartements.etat', 'actif')
+            ->where('appartements.nbr_available', '>', 0)
+            ->whereIn('appartements.uuid', $appartementIds);
+
+        if ($request->filled('commodities')) {
+            foreach ($request->commodities as $commodity) {
+                $query->where('appartements.commodities', 'LIKE', '%' . $commodity . '%');
+            }
+        }
+
+        if ($request->filled(['min_price', 'max_price'])) {
+            $query->whereHas('tarifications', function ($q) use ($request) {
+                $q->whereBetween('price', [
+                    $request->min_price,
+                    $request->max_price
+                ]);
+            });
+        }
+
+        // Calcul de distance Haversine et tri si coordonnées fournies
+        if ($latitudeUser && $longitudeUser) {
+            $haversine = "(6371 * acos(cos(radians($latitudeUser)) 
+        * cos(radians(properties.latitude)) 
+        * cos(radians(properties.longitude) - radians($longitudeUser)) 
+        + sin(radians($latitudeUser)) 
+        * sin(radians(properties.latitude))))";
+
+            if ($useGeolocation) {
+                $query->whereHas('property', function ($q) use ($haversine) {
+                    $q->whereRaw("$haversine <= 10");
+                });
+
+                $query->with(['property' => function ($q) use ($haversine) {
+                    $q->addSelect([
+                        'properties.*',
+                        DB::raw("$haversine AS distance_km")
+                    ]);
+                }])
+                    ->join('properties', 'appartements.property_uuid', '=', 'properties.uuid')
+                    ->select('appartements.*', DB::raw("$haversine AS distance_km"))
+                    ->orderBy('distance_km', 'asc')
+                    ->orderBy('appartements.created_at', 'desc');
+            } else {
+                $query->with(['property' => function ($q) use ($haversine) {
+                    $q->addSelect([
+                        'properties.*',
+                        DB::raw("$haversine AS distance_km")
+                    ]);
+                }]);
+            }
+        } else {
+            $query->orderBy('appartements.created_at', 'desc');
+        }
+
+        // Pagination des appartements
+        $apparts = $query->paginate($perPage);
+
+        // Reverse geocoding POUR CHAQUE APPARTEMENT
+        foreach ($apparts as $appart) {
+            if ($appart->property && $appart->property->latitude && $appart->property->longitude) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
+
+                if ($location) {
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        }
+
+        // Récupérer les données supplémentaires nécessaires pour les filtres
+        $commodities = [];
+        foreach (Appartement::where('etat', 'actif')->get() as $appartement) {
+            if (!empty($appartement->commodities)) {
+                $commodities = array_merge($commodities, array_map('trim', explode(',', $appartement->commodities)));
+            }
+        }
+        $commodities = array_unique($commodities);
+
+        // Retourner la vue partielle pour les résultats et la pagination
+        return response()->json([
+            'html' => view('partials.appartements-list', compact('apparts', 'commodities'))->render(),
+            'pagination' => view('partials.pagination', compact('apparts'))->render(),
+            'count' => $apparts->total()
+        ]);
     }
 
 
@@ -361,7 +526,7 @@ class PagesController extends Controller
         $min_price = $request->input('min_price');
         $max_price = $request->input('max_price');
 
-       
+
 
         $search = $request->input('search');
         $location = $request->input('location');
@@ -402,7 +567,7 @@ class PagesController extends Controller
             $searchQuery->where('query', 'like', "%$type%");
         }
 
-         // 5️⃣ Filtre par rooms
+        // 5️⃣ Filtre par rooms
         if ($rooms) {
             $searchQuery->where('query', 'like', "%$rooms%");
         }
@@ -513,13 +678,13 @@ class PagesController extends Controller
         //     ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
         //     ->first();
         $priceRange = Tarification::where('etat', 'actif')
-        ->whereHas('appartement', function ($q) use ($uuid) {
-            $q->where('etat', 'actif')
-            ->where('nbr_available', '>', 0)
-            ->where('property_uuid', $uuid);
-        })
-        ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
-        ->first();
+            ->whereHas('appartement', function ($q) use ($uuid) {
+                $q->where('etat', 'actif')
+                    ->where('nbr_available', '>', 0)
+                    ->where('property_uuid', $uuid);
+            })
+            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+            ->first();
         // dd($priceRange);
         $minPrice = $priceRange->min_price; // prix minimum
         $maxPrice  = $priceRange->max_price; // prix maximum
@@ -538,9 +703,9 @@ class PagesController extends Controller
 
         // $apparts = $query->orderBy('created_at', 'desc')->paginate($perPage);
         $categories = Variable::where(['type' => 'category_of_property', 'etat' => 'actif'])->get();
-        
+
         $cities = city::where('country_code', 'CIV')->get();
-        return view('pages.apparts', compact('apparts', 'typeAppart', 'uuid', 'categories', 'cities','commodities', 'minPrice', 'maxPrice'));
+        return view('pages.apparts', compact('apparts', 'typeAppart', 'uuid', 'categories', 'cities', 'commodities', 'minPrice', 'maxPrice'));
     }
 
     public function allApparts(Request $request)
@@ -601,7 +766,7 @@ class PagesController extends Controller
             $searchQuery->where('query', 'like', "%$type%");
         }
 
-         // 5️⃣ Filtre par rooms
+        // 5️⃣ Filtre par rooms
         if ($rooms) {
             $searchQuery->where('query', 'like', "%$rooms%");
         }
@@ -711,7 +876,7 @@ class PagesController extends Controller
         $priceRange = Tarification::where('etat', 'actif')
             ->whereHas('appartement', function ($q) {
                 $q->where('etat', 'actif')
-                ->where('nbr_available', '>', 0);
+                    ->where('nbr_available', '>', 0);
             })
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
@@ -735,7 +900,7 @@ class PagesController extends Controller
         $categories = Variable::where(['type' => 'category_of_property', 'etat' => 'actif'])->get();
         $cities = city::where('country_code', 'CIV')->get();
 
-        return view('pages.showAllApparts', compact('apparts', 'typeAppart', 'categories', 'cities','commodities', 'minPrice', 'maxPrice'));
+        return view('pages.showAllApparts', compact('apparts', 'typeAppart', 'categories', 'cities', 'commodities', 'minPrice', 'maxPrice'));
     }
 
     public function indexApropos()
@@ -759,27 +924,27 @@ class PagesController extends Controller
         $appart = Appartement::where('etat', '=', 'actif')->where('uuid', $uuid)->first();
         // Reverse geocoding POUR L'APPARTEMENT
         if (
-                $appart->property &&
-                $appart->property->latitude &&
+            $appart->property &&
+            $appart->property->latitude &&
+            $appart->property->longitude
+        ) {
+            $location = GeocodingService::reverse(
+                $appart->property->latitude,
                 $appart->property->longitude
-            ) {
-                $location = GeocodingService::reverse(
-                    $appart->property->latitude,
-                    $appart->property->longitude
-                );
+            );
 
-                if ($location) {
-                    // Injection dynamique
-                    $appart->property->setAttribute('country_name',  $location['country']);
-                    $appart->property->setAttribute('city_name',     $location['city']);
-                    $appart->property->setAttribute('district_name', $location['district']);
-                    $appart->property->setAttribute('address_name',  $location['address']);
-                    $appart->property->setAttribute('commune_name',  $location['commune']);
-                }
+            if ($location) {
+                // Injection dynamique
+                $appart->property->setAttribute('country_name',  $location['country']);
+                $appart->property->setAttribute('city_name',     $location['city']);
+                $appart->property->setAttribute('district_name', $location['district']);
+                $appart->property->setAttribute('address_name',  $location['address']);
+                $appart->property->setAttribute('commune_name',  $location['commune']);
             }
+        }
         // foreach ($apparts as $appart) {
 
-            
+
         // }
 
         $visitUuid = session('visit_uuid');
@@ -789,9 +954,9 @@ class PagesController extends Controller
             $todayEnd   = Carbon::today()->endOfDay();
 
             $view = AppartementView::where('visit_uuid', $visitUuid)
-            ->where('appartement_uuid', $uuid)
-            ->whereBetween('viewed_at', [$todayStart, $todayEnd])
-            ->first();
+                ->where('appartement_uuid', $uuid)
+                ->whereBetween('viewed_at', [$todayStart, $todayEnd])
+                ->first();
 
             if ($view) {
                 // déjà visité aujourd’hui → update

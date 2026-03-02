@@ -52,10 +52,10 @@
                         <button class="btn btn-success me-2">
                             <a class="deleteConfirmation text-white" data-uuid="{{ $item->uuid }}"
                                 data-type="confirmation_redirect" data-placement="top" data-token="{{ csrf_token() }}"
-                                data-url="{{ route('partner.approveComment', $item->uuid) }}"
+                                data-url="{{ auth()->user()->user_type == 'partner' ? route('partner.approveComment', $item->uuid) : route('admin.approveComment', $item->uuid) }}"
                                 data-title="Vous êtes sur le point d'activer ce commentaire"
                                 data-id="{{ $item->uuid }}" data-param="0"
-                                data-route="{{ route('partner.approveComment', $item->uuid) }}" title="Approuver">
+                                data-route="{{ auth()->user()->user_type == 'partner' ? route('partner.approveComment', $item->uuid) : route('admin.approveComment', $item->uuid) }}" title="Approuver">
                                 <i class="fas fa-check" style="cursor: pointer"></i> Activer</a>
                         </button>
 
@@ -63,10 +63,10 @@
                             <a class="deleteConfirmation  text-white" data-uuid="{{ $item->uuid }}"
                                 data-type="confirmation_redirect" data-placement="top"
                                 data-token="{{ csrf_token() }}"
-                                data-url="{{ route('partner.rejectComment', $item->uuid) }}"
+                                data-url="{{ auth()->user()->user_type == 'partner' ? route('partner.rejectComment', $item->uuid) : route('admin.rejectComment', $item->uuid) }}"
                                 data-title="Vous êtes sur le point de rejeter ce commentaire"
                                 data-id="{{ $item->uuid }}" data-param="0"
-                                data-route="{{ route('partner.rejectComment', $item->uuid) }}" title="Rejeter">
+                                data-route="{{ auth()->user()->user_type == 'partner' ? route('partner.rejectComment', $item->uuid) : route('admin.rejectComment', $item->uuid) }}" title="Rejeter">
                                 <i class="fas fa-times" style="cursor: pointer"></i> Rejeter</a>
                         </button>
                     @endif

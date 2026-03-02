@@ -218,9 +218,8 @@
             }
         }
     @endphp
-    <!-- Map -->
     <!-- Recommended -->
-    <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
+    {{-- <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
         <div class="container">
             <div class="box-title style-2 text-center wow fadeInUpSmall" data-wow-delay=".2s" data-wow-duration="2000ms">
                 <h5 class="mt-4">Découvrez les meilleures propriétés pour un séjour de rêve</h5>
@@ -273,7 +272,6 @@
                                             class="link">{{ $item->title ?? '' }}</a>
                                     </div>
                                     
-                                    {{-- <div class="desc"><i class="fs-16 icon icon-mapPin"></i><p>{{ $item->address ?? '' }}</p> </div> --}}
                                     @if (!empty($item->property->address_name))
                                         <div class="desc"><i class="fs-16 icon icon-mapPin"></i><p>{{ $item->property->address_name ?? '' }}</p> </div>
                                     @endif
@@ -303,17 +301,17 @@
                                     </ul>
                                 </div>
                             </div>
-                            {{-- 🚗 Distance + Temps de trajet --}}
+                            
                             @if ($distanceKm)
                                 <div class="archive-bottom d-flex flex-column justify-content-between align-items-center">
                                     <ul class="meta-list p-3 border border-1 border-bottom d-flex justify-content-between w-100">
-                                        {{-- 📏 Distance --}}
+                                       
                                         <li class="item d-flex align-items-center">
                                             <i class="fa-solid fa-ruler-horizontal me-1 text-dark"></i>
                                             <span>{{ $distanceAffiche ?? '' }}</span>
                                         </li>
 
-                                        {{-- 🚶 Temps à pied --}}
+                                        
                                         @if ($tempsPiedAffiche)
                                             <li class="item d-flex align-items-center">
                                                 <i class="fa-solid fa-person-walking me-1 text-dark"></i>
@@ -321,7 +319,7 @@
                                             </li>
                                         @endif
 
-                                        {{-- 🚗 Temps en voiture --}}
+                                       
                                         @if ($tempsVoitureAffiche)
                                             <li class="item d-flex align-items-center">
                                                 <i class="fa-solid fa-car-side me-1 text-dark"></i>
@@ -329,120 +327,18 @@
                                             </li>
                                         @endif
                                     </ul>
-                                    {{-- <hr> --}}
+                                    
                                     <p class="item d-flex align-items-center">
                                         <i class="fa-solid fa-map-location-dot me-1 text-dark"></i>
                                         <span class="fw-bold fs-6">{{ $item->property->city_name ?? '' }} - {{ $item->property->commune_name ?? '' }}</span>
-                                        {{-- <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span> --}}
                                     </p>
                                 </div>
                             @endif
-                            {{-- <div class="archive-bottom d-flex justify-content-between align-items-center">
-                                <div class="d-flex gap-8 align-items-center">
-                                    <div class="avatar avt-40 round">
-                                        <img src="images/avatar/avt-6.jpg" alt="avt">
-                                    </div>
-                                    <span>Arlene McCoy</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <h6>$7250,00</h6>
-                                    <span class="text-variant-1">/SqFT</span>
-                                </div>
-                            </div> --}}
+                            
                         </div>
                     </div>
 
-                    {{-- <div class="col-xl-4 col-md-6">
-                        
-                        <div class="homeya-box style-3">
-                                <div class="images-group">
-                                    <div class="images-style">
-                                        <img src="{{ asset($item->image) }}" alt="{{ $item->title }}">
-                                    </div>
-                               
-                                    <div class="top">
-                                        <ul class="d-flex gap-8"></ul>
-                                        <ul class="d-flex gap-4">
-                                            <li class="box-icon w-32 d-none">
-                                                <span class="icon icon-heart"></span>
-                                            </li>
-                                            <li class="box-icon w-32">
-                                                <a href="{{ route('appart.detail.show', $item->uuid) }}">
-                                                    <span class="icon icon-eye"></span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div class="top">
-                                        <span class="flag-tag style-2">{{ $item->type->libelle }} {{ !empty($item->property->category) ? ' | ' . $item->property->category->libelle : '' }}</span>
-                                    </div>
-
-                                    <div class="content">
-                                        <a href="{{ route('appart.detail.show', $item->uuid) }}" class="link">
-                                            <div class="title text-1 text-capitalize">
-                                                <a href="{{ route('appart.detail.show', $item->uuid) }}"
-                                                    class="link text-white">{{ $item->title ?? '' }}</a>
-                                            </div>
-
-                                            <ul class="meta-list">
-                                                <li class="item">
-                                                    <i class="icon icon-bed"></i>
-                                                    <span>{{ $item->nbr_room ?? 0 }}</span>
-                                                </li>
-                                                <li class="item">
-                                                    <i class="icon icon-bathtub"></i>
-                                                    <span>{{ $item->nbr_bathroom ?? 0 }}</span>
-                                                </li>
-                                                <li class="item">
-                                                    <i class="icon icon-money"></i>
-                                                    <span>
-                                                        @if ($tarifHeure)
-                                                            À partir de {{ number_format($tarifHeure->price, 0, ',', ' ') }}
-                                                            FCFA/{{ $tarifHeure->nbr_of_sejour ?? '' }}{{ $tarifHeure->nbr_of_sejour <= 1 ? 'hre' : 'hres' }}
-                                                        @elseif ($tarifJour)
-                                                            À partir de {{ number_format($tarifJour->price, 0, ',', ' ') }}
-                                                            FCFA/{{ $tarifJour->nbr_of_sejour ?? '' }}{{ $tarifJour->nbr_of_sejour <= 1 ? 'jr' : 'jrs' }}
-                                                        @else
-                                                            Prix non disponible
-                                                        @endif
-                                                    </span>
-                                                </li>
-                                            </ul>
-
-                                            
-                                            @if ($distanceKm)
-                                                <ul class="meta-list justify-content-between w-100">
-                                                    <li class="item d-flex align-items-center">
-                                                        <i class="fa-solid fa-ruler-horizontal me-1 text-white"></i>
-                                                        <span>{{ $distanceAffiche ?? '' }}</span>
-                                                    </li>
-
-                                                    @if ($tempsPiedAffiche)
-                                                        <li class="item d-flex align-items-center">
-                                                            <i class="fa-solid fa-person-walking me-1 text-white"></i>
-                                                            <span>{{ $tempsPiedAffiche ?? '' }}</span>
-                                                        </li>
-                                                    @endif
-
-                                                    @if ($tempsVoitureAffiche)
-                                                        <li class="item d-flex align-items-center">
-                                                            <i class="fa-solid fa-car-side me-1 text-white"></i>
-                                                            <span>{{ $tempsVoitureAffiche ?? '' }}</span>
-                                                        </li>
-                                                    @endif
-                                                    <li class="item d-flex align-items-center">
-                                                        <i class="fa-solid fa-map-location-dot me-1 text-white"></i>
-                                                        <span>{{ $item->property->ville->label ?? '' }} - {{ $item->property->pays->label ?? '' }}</span>
-                                                    </li>
-                                                </ul>
-                                            @endif
-                                        </a>
-                                    </div>
-                                </div>
-                        </div>
-                    </div> --}}
                 @empty
-                    {{-- Vérifie s’il y a une recherche effectuée --}}
                     @if (request()->has('search') || request()->has('type') || request()->has('location') || request()->has('categorie') || request()->has('rooms') || request()->has('bathrooms') || request()->has('sejour') || request()->has('commodities') || request()->has('min_price') || request()->has('max_price'))
                         <div class="d-flex flex-column align-items-center">
                             <i class="fas fa-home fa-3x text-muted pb-3 opacity-50"></i>
@@ -469,12 +365,39 @@
                 <div class="text-center pt-4">
                     <a href="{{ route('appart.all') }}" class="tf-btn primary size-1">Voir tous les biens</a>
                 </div>
-                {{-- <div class="text-center pt-4">
-                    <a href="{{ route('contratPrestataire', 'jkfeejk') }}" target="_blank" class="tf-btn primary size-1">Contrat </a>
-                </div> --}}
+                
+            @endif
+        </div>
+    </section> --}}
+
+    <!-- Recommended -->
+    <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
+        <div class="container">
+            <div class="box-title style-2 text-center wow fadeInUpSmall" data-wow-delay=".2s" data-wow-duration="2000ms">
+                <h5 class="mt-4">Découvrez les meilleures propriétés pour un séjour de rêve</h5>
+            </div>
+
+            <!-- Compteur de résultats (optionnel) -->
+            <div class="result-count text-muted mb-3">
+                {{ $apparts->total() }} résultat(s) trouvé(s)
+            </div>
+
+            <div class="row wow fadeInUpSmall" data-wow-delay=".2s" data-wow-duration="2000ms">
+                @include('partials.appartements-list', ['apparts' => $apparts])
+            </div>
+
+            <div class="nav-pagination pt-4">
+                {{ $apparts->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
+
+            @if ($apparts->count() > 0)
+                <div class="text-center pt-4">
+                    <a href="{{ route('appart.all') }}" class="tf-btn primary size-1">Voir tous les biens</a>
+                </div>
             @endif
         </div>
     </section>
+    <!-- End Recommended -->
     <!-- End Recommended -->
 
 
@@ -748,34 +671,7 @@
         </div>
     </section>
 
-
     {{-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Vérifier si les coordonnées sont déjà présentes
-            const latInput = document.getElementById('user_lat');
-            const lngInput = document.getElementById('user_lng');
-            // const lngInput = document.getElementById('search');
-
-            if (!latInput.value || !lngInput.value) {
-                // Récupérer automatiquement la position
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        latInput.value = position.coords.latitude;
-                        lngInput.value = position.coords.longitude;
-
-                        // Soumettre automatiquement le formulaire
-                        document.getElementById('searchAppartsForm').submit();
-                    }, function(error) {
-                        console.warn("Impossible de récupérer la position :", error.message);
-                        // On peut charger les appartements sans géolocalisation si refusé
-                    });
-                } else {
-                    console.warn("Géolocalisation non supportée par le navigateur.");
-                }
-            }
-        });
-    </script> --}}
-    <script>
         document.addEventListener('DOMContentLoaded', function() {
             const latInput = document.getElementById('user_lat');
             const lngInput = document.getElementById('user_lng');
@@ -822,6 +718,344 @@
                 }
             }
         });
-    </script>
+    </script> --}}
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('searchAppartsForm');
+    const resultsContainer = document.querySelector('.row.wow.fadeInUpSmall');
+    const paginationContainer = document.querySelector('.nav-pagination.pt-4');
+    const latInput = document.getElementById('user_lat');
+    const lngInput = document.getElementById('user_lng');
+    let isSubmitting = false;
+
+    // Fonction pour soumettre le formulaire en AJAX
+    function submitForm(page = 1) {
+        if (isSubmitting) return;
+        isSubmitting = true;
+
+        // Afficher un loader
+        showLoader();
+
+        // Récupérer les données du formulaire
+        const formData = new FormData(form);
+        
+        // Ajouter la page si spécifiée
+        if (page > 1) {
+            formData.set('page', page);
+        }
+
+        // Convertir FormData en objet pour une utilisation avec $.param ou URLSearchParams
+        const params = new URLSearchParams();
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                if (key === 'commodities[]') {
+                    params.append('commodities[]', value);
+                } else {
+                    params.set(key, value);
+                }
+            }
+        }
+
+        // Effectuer la requête AJAX
+        fetch(`/api/appartements/search?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mettre à jour le DOM avec les nouveaux résultats
+            updateResults(data);
+            
+            // Mettre à jour l'URL sans recharger la page
+            updateURL(params);
+            
+            // Initialiser les nouveaux éléments (comme les tooltips, etc.)
+            initializeComponents();
+            
+            isSubmitting = false;
+            hideLoader();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            isSubmitting = false;
+            hideLoader();
+            showError('Une erreur est survenue lors de la recherche');
+        });
+    }
+
+    // Fonction pour mettre à jour les résultats
+    function updateResults(data) {
+        if (resultsContainer) {
+            resultsContainer.innerHTML = data.html;
+        }
+        if (paginationContainer && data.pagination) {
+            paginationContainer.innerHTML = data.pagination;
+        }
+        
+        // Mettre à jour le compteur de résultats si présent
+        const resultCount = document.querySelector('.result-count');
+        if (resultCount && data.count !== undefined) {
+            resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+        }
+    }
+
+    // Fonction pour mettre à jour l'URL sans recharger
+    function updateURL(params) {
+        const newUrl = window.location.pathname + '?' + params.toString();
+        window.history.pushState({ path: newUrl }, '', newUrl);
+    }
+
+    // Fonction pour afficher un loader
+    function showLoader() {
+        if (resultsContainer) {
+            resultsContainer.style.opacity = '0.6';
+            resultsContainer.style.transition = 'opacity 0.3s';
+            
+            // Ajouter un loader si nécessaire
+            const loader = document.createElement('div');
+            loader.className = 'text-center py-4';
+            loader.id = 'searchLoader';
+            loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement...</span></div>';
+            
+            if (!document.getElementById('searchLoader')) {
+                resultsContainer.parentNode.insertBefore(loader, resultsContainer);
+            }
+        }
+    }
+
+    // Fonction pour cacher le loader
+    function hideLoader() {
+        if (resultsContainer) {
+            resultsContainer.style.opacity = '1';
+        }
+        const loader = document.getElementById('searchLoader');
+        if (loader) {
+            loader.remove();
+        }
+    }
+
+    // Fonction pour afficher une erreur
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorDiv.role = 'alert';
+        errorDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        if (resultsContainer) {
+            resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
+            
+            // Auto-fermeture après 5 secondes
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+    }
+
+    // Fonction pour initialiser les composants après mise à jour
+    function initializeComponents() {
+        // Réinitialiser les tooltips Bootstrap
+        if (typeof bootstrap !== 'undefined') {
+            const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+        }
+
+        // Réinitialiser les sliders de prix si nécessaire
+        if (typeof initPriceSlider === 'function') {
+            initPriceSlider();
+        }
+
+        // Réinitialiser les selects stylisés
+        if (typeof NiceSelect !== 'undefined') {
+            NiceSelect.bind(document.querySelectorAll('.nice-select'));
+        }
+    }
+
+    // Géolocalisation
+    function handleGeolocation() {
+        if (!latInput.value || !lngInput.value) {
+            if (navigator.geolocation) {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        latInput.value = position.coords.latitude;
+                        lngInput.value = position.coords.longitude;
+                        // Soumission automatique après géolocalisation
+                        submitForm();
+                    }, 
+                    function(error) {
+                        console.warn("Erreur de géolocalisation:", error);
+                        // Soumettre sans géolocalisation
+                        submitForm();
+                    }, 
+                    options
+                );
+            } else {
+                console.warn("Géolocalisation non supportée");
+                submitForm();
+            }
+        } else {
+            // Si les coordonnées sont déjà présentes, soumettre directement
+            submitForm();
+        }
+    }
+
+    // Événement de soumission du formulaire
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        handleGeolocation();
+    });
+
+    // Écouter les changements sur les champs de filtre (optionnel)
+    const filterInputs = form.querySelectorAll('input:not([type="hidden"]), select');
+    filterInputs.forEach(input => {
+        if (input.type !== 'submit') {
+            input.addEventListener('change', function() {
+                // Debounce pour éviter trop de requêtes
+                clearTimeout(window.filterTimeout);
+                window.filterTimeout = setTimeout(() => {
+                    submitForm();
+                }, 500);
+            });
+        }
+    });
+
+    // Gestion de la pagination
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.page-link') || e.target.closest('.page-link')) {
+            e.preventDefault();
+            const pageBtn = e.target.closest('.page-link');
+            const page = pageBtn.dataset.page;
+            
+            if (page) {
+                submitForm(page);
+            }
+        }
+    });
+
+    // Gestion du bouton de réinitialisation
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
+            e.preventDefault();
+            
+            // Réinitialiser tous les champs du formulaire
+            form.reset();
+            
+            // Réinitialiser les champs cachés
+            latInput.value = '';
+            lngInput.value = '';
+            
+            // Soumettre à nouveau
+            handleGeolocation();
+        }
+    });
+
+    // Gestion du bouton "Voir tous les biens"
+    const viewAllBtn = document.querySelector('a[href="{{ route('appart.all') }}"]');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Rediriger normalement car c'est une autre page
+            window.location.href = this.href;
+        });
+    }
+
+    // Initialisation au chargement de la page
+    // Si des paramètres sont présents dans l'URL, les appliquer
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString()) {
+        // Remplir le formulaire avec les paramètres de l'URL
+        for (let [key, value] of urlParams.entries()) {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                if (input.type === 'checkbox') {
+                    input.checked = true;
+                } else {
+                    input.value = value;
+                }
+            }
+        }
+    }
+
+    // // Gestion du bouton "Avancé"
+    // const advancedFilterBtn = document.querySelector('.filter-advanced');
+    // const advancedFilterSection = document.querySelector('.wd-search-form');
+    
+    // if (advancedFilterBtn && advancedFilterSection) {
+    //     advancedFilterBtn.addEventListener('click', function(e) {
+    //         e.preventDefault();
+    //         advancedFilterSection.classList.toggle('show');
+    //         this.classList.toggle('active');
+    //     });
+    // }
+});
+
+// Fonctions utilitaires globales
+window.formatDistance = function(km) {
+    if (!km) return null;
+    const metres = km * 1000;
+    return metres >= 1000
+        ? km.toFixed(1).replace('.', ',') + ' km'
+        : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
+};
+
+window.formatTemps = function(minutes) {
+    if (!minutes) return null;
+    if (minutes >= 60) {
+        const heures = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
+    }
+    return Math.round(minutes) + ' min';
+};
+</script>
+
+<style>
+.wd-search-form {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.wd-search-form.show {
+    max-height: 500px;
+    transition: max-height 0.5s ease-in;
+}
+
+.filter-advanced.active .icon-faders {
+    transform: rotate(180deg);
+}
+
+.icon-faders {
+    transition: transform 0.3s;
+}
+
+#searchLoader {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+.row.wow.fadeInUpSmall {
+    min-height: 400px;
+    position: relative;
+}
+
+.page-link {
+    cursor: pointer;
+}
+</style>
     <!-- end banner -->
 @endsection
