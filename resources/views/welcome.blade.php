@@ -188,7 +188,7 @@
         </div>
     </section>
 
-    @php
+    {{-- @php
         // ✅ Fonctions utilitaires définies une seule fois
         if (!function_exists('formatTemps')) {
             function formatTemps($minutes)
@@ -217,7 +217,7 @@
                     : number_format($metres, 0, ',', ' ') . ' m';
             }
         }
-    @endphp
+    @endphp --}}
     <!-- Recommended -->
     {{-- <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
         <div class="container">

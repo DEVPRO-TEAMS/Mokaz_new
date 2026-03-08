@@ -3,27 +3,27 @@
 use Illuminate\Support\Facades\Http;
 
 
-function RefgenerateCode($table,$init,$key)
+function RefgenerateCode($table, $init, $key)
 {
     $latest = $table::latest()->first();
     if (! $latest) {
-        return $init.'-00001';
+        return $init . '-00001';
     }
 
     $string = preg_replace("/[^0-9\.]/", '', $latest->$key);
 
-    return $init.'-' . sprintf('%05d',$string+1);
+    return $init . '-' . sprintf('%05d', $string + 1);
 }
-function Refgenerate($table,$init,$key)
+function Refgenerate($table, $init, $key)
 {
     $latest = $table::latest()->first();
     if (! $latest) {
-        return $init.'-00001';
+        return $init . '-00001';
     }
 
     $string = preg_replace("/[^0-9\.]/", '', $latest->$key);
 
-    return $init.'-' . sprintf('%05d',$string+1);
+    return $init . '-' . sprintf('%05d', $string + 1);
 }
 
 function cleanHtmlForSearch(?string $html): string
@@ -64,4 +64,30 @@ if (!function_exists('sendSms')) {
 }
 
 
+if (!function_exists('formatTemps')) {
+    function formatTemps($minutes)
+    {
+        if (!$minutes) {
+            return null;
+        }
+        if ($minutes >= 60) {
+            $heures = floor($minutes / 60);
+            $mins = round($minutes % 60);
+            return $heures . 'h ' . ($mins > 0 ? $mins . 'min' : '');
+        }
+        return round($minutes) . ' min';
+    }
+}
 
+if (!function_exists('formatDistance')) {
+    function formatDistance($km)
+    {
+        if (!$km) {
+            return null;
+        }
+        $metres = $km * 1000;
+        return $metres >= 1000
+            ? number_format($km, 1, ',', ' ') . ' km'
+            : number_format($metres, 0, ',', ' ') . ' m';
+    }
+}
