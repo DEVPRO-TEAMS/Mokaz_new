@@ -465,6 +465,9 @@ class PagesController extends Controller
             ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
             ->first();
 
+        $minPrice = $priceRange ? $priceRange->min_price : 0;
+        $maxPrice = $priceRange ? $priceRange->max_price : 0;
+
         // Locations pour l'affichage
         $locations = Property::with(['ville.locationImage', 'pays'])
             ->where('etat', 'actif')
