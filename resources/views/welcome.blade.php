@@ -1048,442 +1048,440 @@
         };
     </script> --}}
 
-@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-});
-
-function initializeApp() {
-    const form = document.getElementById('searchAppartsForm');
-    const resultsContainer = document.getElementById('resultsContainer');
-    const paginationContainer = document.getElementById('paginationContainer');
-    const resultCount = document.getElementById('resultCount');
-    const loader = document.getElementById('resultsLoader');
-    const latInput = document.getElementById('user_lat');
-    const lngInput = document.getElementById('user_lng');
-    
-    let isSubmitting = false;
-    let currentRequest = null;
-
-    // Chargement initial des résultats
-    loadInitialResults();
-
-    // Fonction pour charger les résultats initiaux
-    function loadInitialResults() {
-        showLoader();
-        
-        // Vérifier s'il y a des paramètres dans l'URL
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        if (urlParams.toString()) {
-            // Remplir le formulaire avec les paramètres de l'URL
-            for (let [key, value] of urlParams.entries()) {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    if (input.type === 'checkbox') {
-                        if (key === 'commodities[]') {
-                            const checkbox = form.querySelector(`input[value="${value}"]`);
-                            if (checkbox) checkbox.checked = true;
-                        }
-                    } else {
-                        input.value = value;
-                    }
-                }
-            }
-        }
-        
-        // Démarrer la géolocalisation et charger les résultats
-        handleGeolocationAndSearch();
-    }
-
-    // Fonction pour gérer la géolocalisation et la recherche
-    function handleGeolocationAndSearch() {
-        if (!latInput.value || !lngInput.value) {
-            if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                };
-
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        latInput.value = position.coords.latitude;
-                        lngInput.value = position.coords.longitude;
-                        performSearch();
-                    }, 
-                    function(error) {
-                        console.warn("Erreur de géolocalisation:", error);
-                        performSearch();
-                    }, 
-                    options
-                );
-            } else {
-                console.warn("Géolocalisation non supportée");
-                performSearch();
-            }
-        } else {
-            performSearch();
-        }
-    }
-
-    // Fonction principale de recherche
-    function performSearch(page = 1) {
-        if (isSubmitting) return;
-        
-        // Annuler la requête précédente si elle existe
-        if (currentRequest) {
-            currentRequest.abort();
-        }
-        
-        isSubmitting = true;
-        showLoader();
-
-        // Créer un nouvel AbortController pour cette requête
-        const controller = new AbortController();
-        currentRequest = controller;
-
-        // Récupérer les données du formulaire
-        const formData = new FormData(form);
-        
-        // Ajouter la page si spécifiée
-        if (page > 1) {
-            formData.set('page', page);
-        }
-
-        // Ajouter les en-têtes AJAX
-        formData.set('ajax', true);
-
-        // Convertir FormData en objet pour les paramètres
-        const params = new URLSearchParams();
-        for (let [key, value] of formData.entries()) {
-            if (value) {
-                if (key === 'commodities[]') {
-                    params.append('commodities[]', value);
-                } else {
-                    params.set(key, value);
-                }
-            }
-        }
-
-        // Effectuer la requête AJAX
-        fetch(`${window.location.pathname}?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-            },
-            signal: controller.signal
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur réseau');
-            }
-            return response.json();
-        })
-        .then(data => {
-            updateResults(data);
-            updateURL(params);
-            isSubmitting = false;
-            hideLoader();
-            currentRequest = null;
-        })
-        .catch(error => {
-            if (error.name === 'AbortError') {
-                console.log('Requête annulée');
-            } else {
-                console.error('Erreur:', error);
-                showError('Une erreur est survenue lors de la recherche');
-            }
-            isSubmitting = false;
-            hideLoader();
-            currentRequest = null;
-        });
-    }
-
-    // Fonction pour mettre à jour les résultats
-    function updateResults(data) {
-        if (resultsContainer) {
-            resultsContainer.innerHTML = data.html;
-        }
-        if (paginationContainer && data.pagination) {
-            paginationContainer.innerHTML = data.pagination;
-        }
-        if (resultCount && data.count !== undefined) {
-            resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
-            resultCount.style.display = 'block';
-        }
-        
-        // Initialiser les composants après mise à jour
-        initializeComponents();
-    }
-
-    // Fonction pour mettre à jour l'URL
-    function updateURL(params) {
-        const newUrl = window.location.pathname + '?' + params.toString();
-        window.history.pushState({ path: newUrl, page: 'search' }, '', newUrl);
-    }
-
-    // Fonction pour afficher le loader
-    function showLoader() {
-        if (loader) {
-            loader.style.display = 'block';
-        }
-        if (resultsContainer) {
-            resultsContainer.style.opacity = '0.6';
-            resultsContainer.style.transition = 'opacity 0.3s';
-        }
-    }
-
-    // Fonction pour cacher le loader
-    function hideLoader() {
-        if (loader) {
-            loader.style.display = 'none';
-        }
-        if (resultsContainer) {
-            resultsContainer.style.opacity = '1';
-        }
-    }
-
-    // Fonction pour afficher une erreur
-    function showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-        errorDiv.role = 'alert';
-        errorDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        if (resultsContainer) {
-            resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
-            setTimeout(() => errorDiv.remove(), 5000);
-        }
-    }
-
-    // Fonction pour initialiser les composants
-    function initializeComponents() {
-        // Tooltips Bootstrap
-        if (typeof bootstrap !== 'undefined') {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
-        }
-
-        // Nice Select
-        if (typeof NiceSelect !== 'undefined') {
-            NiceSelect.bind(document.querySelectorAll('.nice-select'));
-        }
-
-        // Slider de prix
-        if (typeof initPriceSlider === 'function') {
-            initPriceSlider();
-        }
-
-        // WOW.js pour les animations
-        if (typeof WOW !== 'undefined' && window.wow) {
-            window.wow.sync();
-        }
-    }
-
-    // Événement de soumission du formulaire
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        handleGeolocationAndSearch();
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeApp();
     });
 
-    // Écouter les changements sur les champs de filtre (avec debounce)
-    const filterInputs = form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), select');
-    filterInputs.forEach(input => {
-        input.addEventListener('change', function() {
-            clearTimeout(window.filterTimeout);
-            window.filterTimeout = setTimeout(() => {
-                handleGeolocationAndSearch();
-            }, 500);
-        });
-    });
+    function initializeApp() {
+        const form = document.getElementById('searchAppartsForm');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const resultCount = document.getElementById('resultCount');
+        const loader = document.getElementById('resultsLoader');
+        const latInput = document.getElementById('user_lat');
+        const lngInput = document.getElementById('user_lng');
+        
+        let isSubmitting = false;
+        let currentRequest = null;
 
-    // Gestion de la pagination
-    document.addEventListener('click', function(e) {
-        const pageBtn = e.target.closest('.page-link');
-        if (pageBtn && pageBtn.dataset.page) {
-            e.preventDefault();
-            const page = pageBtn.dataset.page;
-            performSearch(page);
+        // Chargement initial des résultats
+        loadInitialResults();
+
+        // Fonction pour charger les résultats initiaux
+        function loadInitialResults() {
+            showLoader();
             
-            // Scroll vers les résultats
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-
-    // Gestion du bouton de réinitialisation
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
-            e.preventDefault();
-            form.reset();
-            latInput.value = '';
-            lngInput.value = '';
-            handleGeolocationAndSearch();
-        }
-    });
-
-    // Gestion du bouton "Voir tous les biens"
-    const viewAllBtn = document.querySelector('a[href*="appart.all"]');
-    if (viewAllBtn) {
-        viewAllBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Réinitialiser tous les filtres
-            form.reset();
-            latInput.value = '';
-            lngInput.value = '';
-            
-            // Recharger les résultats
-            handleGeolocationAndSearch();
-            
-            // Mettre à jour l'URL
-            window.history.pushState({}, '', window.location.pathname);
-        });
-    }
-
-    // Gestion du bouton "Avancé"
-    const advancedFilterBtn = document.querySelector('.filter-advanced');
-    const advancedFilterSection = document.querySelector('.wd-search-form');
-    
-    if (advancedFilterBtn && advancedFilterSection) {
-        advancedFilterBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            advancedFilterSection.classList.toggle('show');
-            this.classList.toggle('active');
-        });
-    }
-
-    // Gestion du bouton "Réinitialiser" dans les filtres avancés (si existant)
-    const resetAdvancedBtn = document.querySelector('#resetAdvancedFilters');
-    if (resetAdvancedBtn) {
-        resetAdvancedBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const advancedInputs = advancedFilterSection.querySelectorAll('input, select');
-            advancedInputs.forEach(input => {
-                if (input.type === 'checkbox' || input.type === 'radio') {
-                    input.checked = false;
-                } else {
-                    input.value = '';
-                }
-            });
-            handleGeolocationAndSearch();
-        });
-    }
-
-    // Gestion des touches de navigation du navigateur
-    window.addEventListener('popstate', function(event) {
-        if (event.state && event.state.page === 'search') {
-            // Recharger les résultats basés sur l'URL
+            // Vérifier s'il y a des paramètres dans l'URL
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Mettre à jour le formulaire avec les paramètres de l'URL
-            for (let [key, value] of urlParams.entries()) {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) {
-                    if (input.type === 'checkbox') {
-                        if (key === 'commodities[]') {
-                            const checkbox = form.querySelector(`input[value="${value}"]`);
-                            if (checkbox) checkbox.checked = true;
+            if (urlParams.toString()) {
+                // Remplir le formulaire avec les paramètres de l'URL
+                for (let [key, value] of urlParams.entries()) {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            if (key === 'commodities[]') {
+                                const checkbox = form.querySelector(`input[value="${value}"]`);
+                                if (checkbox) checkbox.checked = true;
+                            }
+                        } else {
+                            input.value = value;
                         }
-                    } else {
-                        input.value = value;
                     }
                 }
             }
             
-            // Recharger les résultats
+            // Démarrer la géolocalisation et charger les résultats
             handleGeolocationAndSearch();
         }
-    });
-}
 
-// Fonctions utilitaires globales
-window.formatDistance = function(km) {
-    if (!km) return null;
-    const metres = km * 1000;
-    return metres >= 1000
-        ? km.toFixed(1).replace('.', ',') + ' km'
-        : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
-};
+        // Fonction pour gérer la géolocalisation et la recherche
+        function handleGeolocationAndSearch() {
+            if (!latInput.value || !lngInput.value) {
+                if (navigator.geolocation) {
+                    const options = {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    };
 
-window.formatTemps = function(minutes) {
-    if (!minutes) return null;
-    if (minutes >= 60) {
-        const heures = Math.floor(minutes / 60);
-        const mins = Math.round(minutes % 60);
-        return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
+                    navigator.geolocation.getCurrentPosition(
+                        function(position) {
+                            latInput.value = position.coords.latitude;
+                            lngInput.value = position.coords.longitude;
+                            performSearch();
+                        }, 
+                        function(error) {
+                            console.warn("Erreur de géolocalisation:", error);
+                            performSearch();
+                        }, 
+                        options
+                    );
+                } else {
+                    console.warn("Géolocalisation non supportée");
+                    performSearch();
+                }
+            } else {
+                performSearch();
+            }
+        }
+
+        // Fonction principale de recherche
+        function performSearch(page = 1) {
+            if (isSubmitting) return;
+            
+            // Annuler la requête précédente si elle existe
+            if (currentRequest) {
+                currentRequest.abort();
+            }
+            
+            isSubmitting = true;
+            showLoader();
+
+            // Créer un nouvel AbortController pour cette requête
+            const controller = new AbortController();
+            currentRequest = controller;
+
+            // Récupérer les données du formulaire
+            const formData = new FormData(form);
+            
+            // Ajouter la page si spécifiée
+            if (page > 1) {
+                formData.set('page', page);
+            }
+
+            // Ajouter les en-têtes AJAX
+            formData.set('ajax', true);
+
+            // Convertir FormData en objet pour les paramètres
+            const params = new URLSearchParams();
+            for (let [key, value] of formData.entries()) {
+                if (value) {
+                    if (key === 'commodities[]') {
+                        params.append('commodities[]', value);
+                    } else {
+                        params.set(key, value);
+                    }
+                }
+            }
+
+            // Effectuer la requête AJAX
+            fetch(`${window.location.pathname}?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                signal: controller.signal
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur réseau');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateResults(data);
+                updateURL(params);
+                isSubmitting = false;
+                hideLoader();
+                currentRequest = null;
+            })
+            .catch(error => {
+                if (error.name === 'AbortError') {
+                    console.log('Requête annulée');
+                } else {
+                    console.error('Erreur:', error);
+                    showError('Une erreur est survenue lors de la recherche');
+                }
+                isSubmitting = false;
+                hideLoader();
+                currentRequest = null;
+            });
+        }
+
+        // Fonction pour mettre à jour les résultats
+        function updateResults(data) {
+            if (resultsContainer) {
+                resultsContainer.innerHTML = data.html;
+            }
+            if (paginationContainer && data.pagination) {
+                paginationContainer.innerHTML = data.pagination;
+            }
+            if (resultCount && data.count !== undefined) {
+                resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+                resultCount.style.display = 'block';
+            }
+            
+            // Initialiser les composants après mise à jour
+            initializeComponents();
+        }
+
+        // Fonction pour mettre à jour l'URL
+        function updateURL(params) {
+            const newUrl = window.location.pathname + '?' + params.toString();
+            window.history.pushState({ path: newUrl, page: 'search' }, '', newUrl);
+        }
+
+        // Fonction pour afficher le loader
+        function showLoader() {
+            if (loader) {
+                loader.style.display = 'block';
+            }
+            if (resultsContainer) {
+                resultsContainer.style.opacity = '0.6';
+                resultsContainer.style.transition = 'opacity 0.3s';
+            }
+        }
+
+        // Fonction pour cacher le loader
+        function hideLoader() {
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            if (resultsContainer) {
+                resultsContainer.style.opacity = '1';
+            }
+        }
+
+        // Fonction pour afficher une erreur
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            errorDiv.role = 'alert';
+            errorDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            if (resultsContainer) {
+                resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
+        }
+
+        // Fonction pour initialiser les composants
+        function initializeComponents() {
+            // Tooltips Bootstrap
+            if (typeof bootstrap !== 'undefined') {
+                document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+            }
+
+            // Nice Select
+            if (typeof NiceSelect !== 'undefined') {
+                NiceSelect.bind(document.querySelectorAll('.nice-select'));
+            }
+
+            // Slider de prix
+            if (typeof initPriceSlider === 'function') {
+                initPriceSlider();
+            }
+
+            // WOW.js pour les animations
+            if (typeof WOW !== 'undefined' && window.wow) {
+                window.wow.sync();
+            }
+        }
+
+        // Événement de soumission du formulaire
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleGeolocationAndSearch();
+        });
+
+        // Écouter les changements sur les champs de filtre (avec debounce)
+        const filterInputs = form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), select');
+        filterInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                clearTimeout(window.filterTimeout);
+                window.filterTimeout = setTimeout(() => {
+                    handleGeolocationAndSearch();
+                }, 500);
+            });
+        });
+
+        // Gestion de la pagination
+        document.addEventListener('click', function(e) {
+            const pageBtn = e.target.closest('.page-link');
+            if (pageBtn && pageBtn.dataset.page) {
+                e.preventDefault();
+                const page = pageBtn.dataset.page;
+                performSearch(page);
+                
+                // Scroll vers les résultats
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+
+        // Gestion du bouton de réinitialisation
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
+                e.preventDefault();
+                form.reset();
+                latInput.value = '';
+                lngInput.value = '';
+                handleGeolocationAndSearch();
+            }
+        });
+
+        // Gestion du bouton "Voir tous les biens"
+        const viewAllBtn = document.querySelector('a[href*="appart.all"]');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Réinitialiser tous les filtres
+                form.reset();
+                latInput.value = '';
+                lngInput.value = '';
+                
+                // Recharger les résultats
+                handleGeolocationAndSearch();
+                
+                // Mettre à jour l'URL
+                window.history.pushState({}, '', window.location.pathname);
+            });
+        }
+
+        // Gestion du bouton "Avancé"
+        const advancedFilterBtn = document.querySelector('.filter-advanced');
+        const advancedFilterSection = document.querySelector('.wd-search-form');
+        
+        if (advancedFilterBtn && advancedFilterSection) {
+            advancedFilterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                advancedFilterSection.classList.toggle('show');
+                this.classList.toggle('active');
+            });
+        }
+
+        // Gestion du bouton "Réinitialiser" dans les filtres avancés (si existant)
+        const resetAdvancedBtn = document.querySelector('#resetAdvancedFilters');
+        if (resetAdvancedBtn) {
+            resetAdvancedBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const advancedInputs = advancedFilterSection.querySelectorAll('input, select');
+                advancedInputs.forEach(input => {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+                handleGeolocationAndSearch();
+            });
+        }
+
+        // Gestion des touches de navigation du navigateur
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page === 'search') {
+                // Recharger les résultats basés sur l'URL
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Mettre à jour le formulaire avec les paramètres de l'URL
+                for (let [key, value] of urlParams.entries()) {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            if (key === 'commodities[]') {
+                                const checkbox = form.querySelector(`input[value="${value}"]`);
+                                if (checkbox) checkbox.checked = true;
+                            }
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                }
+                
+                // Recharger les résultats
+                handleGeolocationAndSearch();
+            }
+        });
     }
-    return Math.round(minutes) + ' min';
-};
 
-// Initialisation des animations WOW
-if (typeof WOW !== 'undefined') {
-    window.wow = new WOW({
-        boxClass: 'wow',
-        animateClass: 'animated',
-        offset: 0,
-        mobile: true,
-        live: true
-    });
-    window.wow.init();
-}
+    // Fonctions utilitaires globales
+    window.formatDistance = function(km) {
+        if (!km) return null;
+        const metres = km * 1000;
+        return metres >= 1000
+            ? km.toFixed(1).replace('.', ',') + ' km'
+            : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
+    };
+
+    window.formatTemps = function(minutes) {
+        if (!minutes) return null;
+        if (minutes >= 60) {
+            const heures = Math.floor(minutes / 60);
+            const mins = Math.round(minutes % 60);
+            return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
+        }
+        return Math.round(minutes) + ' min';
+    };
+
+    // Initialisation des animations WOW
+    if (typeof WOW !== 'undefined') {
+        window.wow = new WOW({
+            boxClass: 'wow',
+            animateClass: 'animated',
+            offset: 0,
+            mobile: true,
+            live: true
+        });
+        window.wow.init();
+    }
 </script>
 
 <style>
-.wd-search-form {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-}
+    .wd-search-form {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
 
-.wd-search-form.show {
-    max-height: 500px;
-    transition: max-height 0.5s ease-in;
-}
+    .wd-search-form.show {
+        max-height: 500px;
+        transition: max-height 0.5s ease-in;
+    }
 
-.filter-advanced.active .icon-faders {
-    transform: rotate(180deg);
-}
+    .filter-advanced.active .icon-faders {
+        transform: rotate(180deg);
+    }
 
-.icon-faders {
-    transition: transform 0.3s;
-}
+    .icon-faders {
+        transition: transform 0.3s;
+    }
 
-#resultsLoader {
-    position: relative;
-    z-index: 1000;
-}
+    #resultsLoader {
+        position: relative;
+        z-index: 1000;
+    }
 
-#resultsContainer {
-    min-height: 400px;
-    position: relative;
-    transition: opacity 0.3s;
-}
+    #resultsContainer {
+        min-height: 400px;
+        position: relative;
+        transition: opacity 0.3s;
+    }
 
-.page-link {
-    cursor: pointer;
-}
+    .page-link {
+        cursor: pointer;
+    }
 
-.result-count {
-    font-size: 0.9rem;
-    padding: 0.5rem 0;
-}
+    .result-count {
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+    }
 
-/* Animation de chargement */
-@keyframes pulse {
-    0% { opacity: 0.6; }
-    50% { opacity: 1; }
-    100% { opacity: 0.6; }
-}
+    /* Animation de chargement */
+    @keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
 
-.loading-pulse {
-    animation: pulse 1.5s infinite;
-}
+    .loading-pulse {
+        animation: pulse 1.5s infinite;
+    }
 </style>
-@endpush
 @endsection
