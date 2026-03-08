@@ -99,7 +99,7 @@
 
                                         <button type="submit" class="tf-btn primary">Rechercher</button>
                                     </div>
-                                    <div class="wd-search-form">
+                                    <div class="wd-search-form table-responsive">
                                         <div class="grid-1 group-box group-price">
                                             <div class="widget-price">
                                                 <div class="box-title-price">
@@ -1018,7 +1018,7 @@
         };
     </script> --}}
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         initializeApp();
     });
@@ -1400,6 +1400,345 @@
             live: true
         });
         window.wow.init();
+    }
+</script> --}}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Éviter la double initialisation
+        if (window.appInitialized) return;
+        window.appInitialized = true;
+        
+        initializeApp();
+    });
+
+    function initializeApp() {
+        const form = document.getElementById('searchAppartsForm');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const paginationContainer = document.getElementById('paginationContainer');
+        const resultCount = document.getElementById('resultCount');
+        const loader = document.getElementById('resultsLoader');
+        const latInput = document.getElementById('user_lat');
+        const lngInput = document.getElementById('user_lng');
+        const advancedFilterBtn = document.getElementById('advancedFilterBtn');
+        const advancedFilterSection = document.getElementById('advancedFilterSection');
+        
+        let isSubmitting = false;
+        let currentRequest = null;
+        let initialLoadDone = false;
+
+        // Empêcher la soumission traditionnelle
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            });
+        }
+
+        // Chargement initial
+        loadInitialResults();
+
+        function loadInitialResults() {
+            if (initialLoadDone) return;
+            
+            showLoader();
+            
+            // Récupérer les paramètres de l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.toString()) {
+                // Remplir le formulaire
+                for (let [key, value] of urlParams.entries()) {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            if (key === 'commodities[]') {
+                                const checkbox = form.querySelector(`input[value="${value}"]`);
+                                if (checkbox) checkbox.checked = true;
+                            }
+                        } else {
+                            input.value = value;
+                        }
+                    }
+                }
+            }
+            
+            handleGeolocation();
+        }
+
+        function handleGeolocation() {
+            if (latInput.value && lngInput.value) {
+                performSearch();
+                return;
+            }
+
+            if (navigator.geolocation) {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        latInput.value = position.coords.latitude;
+                        lngInput.value = position.coords.longitude;
+                        performSearch();
+                    }, 
+                    function(error) {
+                        console.warn("Erreur de géolocalisation:", error.message);
+                        performSearch();
+                    }, 
+                    options
+                );
+            } else {
+                console.warn("Géolocalisation non supportée");
+                performSearch();
+            }
+        }
+
+        function performSearch(page = 1) {
+            if (isSubmitting) return;
+            
+            if (currentRequest) {
+                currentRequest.abort();
+            }
+            
+            isSubmitting = true;
+            showLoader();
+
+            const controller = new AbortController();
+            currentRequest = controller;
+
+            // Construire les paramètres
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+            
+            for (let [key, value] of formData.entries()) {
+                if (value) {
+                    if (key === 'commodities[]') {
+                        params.append('commodities[]', value);
+                    } else {
+                        params.set(key, value);
+                    }
+                }
+            }
+            
+            if (page > 1) {
+                params.set('page', page);
+            }
+            
+            params.set('ajax', 'true');
+
+            const url = `${window.location.pathname}?${params.toString()}`;
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                signal: controller.signal
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateResults(data);
+                updateURL(params);
+                initialLoadDone = true;
+                isSubmitting = false;
+                hideLoader();
+                currentRequest = null;
+            })
+            .catch(error => {
+                if (error.name === 'AbortError') {
+                    console.log('Requête annulée');
+                } else {
+                    console.error('Erreur:', error);
+                    showError('Une erreur est survenue lors de la recherche');
+                }
+                isSubmitting = false;
+                hideLoader();
+                currentRequest = null;
+            });
+        }
+
+        function updateResults(data) {
+            if (resultsContainer) {
+                resultsContainer.innerHTML = data.html;
+            }
+            if (paginationContainer && data.pagination) {
+                paginationContainer.innerHTML = data.pagination;
+            }
+            if (resultCount && data.count !== undefined) {
+                resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+                resultCount.style.display = 'block';
+            }
+        }
+
+        function updateURL(params) {
+            const newUrl = window.location.pathname + '?' + params.toString();
+            window.history.pushState({ path: newUrl, page: 'search' }, '', newUrl);
+        }
+
+        function showLoader() {
+            if (loader) {
+                loader.style.display = 'block';
+            }
+            if (resultsContainer) {
+                resultsContainer.style.opacity = '0.6';
+                resultsContainer.style.pointerEvents = 'none';
+            }
+        }
+
+        function hideLoader() {
+            if (loader) {
+                loader.style.display = 'none';
+            }
+            if (resultsContainer) {
+                resultsContainer.style.opacity = '1';
+                resultsContainer.style.pointerEvents = 'auto';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            errorDiv.role = 'alert';
+            errorDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            if (resultsContainer) {
+                resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
+        }
+
+        // Événements
+        if (form) {
+            const searchBtn = document.getElementById('searchBtn');
+            if (searchBtn) {
+                searchBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handleGeolocation();
+                });
+            }
+
+            // Filtres en temps réel
+            const filterInputs = form.querySelectorAll('input:not([type="hidden"]):not([type="submit"]), select');
+            filterInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    clearTimeout(window.filterTimeout);
+                    window.filterTimeout = setTimeout(() => {
+                        handleGeolocation();
+                    }, 500);
+                });
+            });
+        }
+
+        // Pagination
+        document.addEventListener('click', function(e) {
+            const pageBtn = e.target.closest('.page-link');
+            if (pageBtn && pageBtn.dataset.page) {
+                e.preventDefault();
+                const page = pageBtn.dataset.page;
+                performSearch(page);
+                
+                if (resultsContainer) {
+                    resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+
+        // Réinitialisation
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
+                e.preventDefault();
+                
+                if (form) {
+                    form.reset();
+                }
+                
+                if (latInput) latInput.value = '';
+                if (lngInput) lngInput.value = '';
+                
+                window.history.pushState({}, '', window.location.pathname);
+                handleGeolocation();
+            }
+        });
+
+        // Voir tous les biens
+        const viewAllBtn = document.getElementById('viewAllBtn');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (form) {
+                    form.reset();
+                }
+                
+                if (latInput) latInput.value = '';
+                if (lngInput) lngInput.value = '';
+                
+                window.history.pushState({}, '', window.location.pathname);
+                handleGeolocation();
+            });
+        }
+
+        // Filtres avancés
+        if (advancedFilterBtn && advancedFilterSection) {
+            advancedFilterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                advancedFilterSection.classList.toggle('show');
+                if (advancedFilterSection.classList.contains('show')) {
+                    advancedFilterSection.style.display = 'block';
+                    setTimeout(() => {
+                        advancedFilterSection.style.maxHeight = advancedFilterSection.scrollHeight + 'px';
+                    }, 10);
+                } else {
+                    advancedFilterSection.style.maxHeight = '0';
+                    setTimeout(() => {
+                        advancedFilterSection.style.display = 'none';
+                    }, 300);
+                }
+                this.classList.toggle('active');
+            });
+        }
+
+        // Navigation historique
+        window.addEventListener('popstate', function(event) {
+            if (event.state && event.state.page === 'search') {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                if (form) {
+                    form.reset();
+                    
+                    for (let [key, value] of urlParams.entries()) {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'checkbox') {
+                                if (key === 'commodities[]') {
+                                    const checkbox = form.querySelector(`input[value="${value}"]`);
+                                    if (checkbox) checkbox.checked = true;
+                                }
+                            } else {
+                                input.value = value;
+                            }
+                        }
+                    }
+                }
+                
+                handleGeolocation();
+            }
+        });
     }
 </script>
 

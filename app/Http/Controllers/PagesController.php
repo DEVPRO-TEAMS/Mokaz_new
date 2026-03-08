@@ -444,10 +444,267 @@ class PagesController extends Controller
     //     ]);
     // }
 
+    // public function index(Request $request)
+    // {
+    //     // Si c'est une requête AJAX, retourner uniquement les données JSON
+    //     if ($request->ajax() || $request->wantsJson()) {
+    //         return $this->searchResults($request);
+    //     }
+
+    //     // Pour la première visite, retourner la vue avec les données minimales
+    //     $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
+    //     $categories = Variable::where(['type' => 'category_of_property', 'etat' => 'actif'])->get();
+    //     $cities = city::where('country_code', 'CIV')->get();
+    //     $testimonials = Testimonial::all();
+
+    //     // Prix min/max pour le slider
+    //     $priceRange = Tarification::where('etat', 'actif')
+    //         ->whereHas('appartement', function ($q) {
+    //             $q->where('etat', 'actif')->where('nbr_available', '>', 0);
+    //         })
+    //         ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+    //         ->first();
+
+    //     $minPrice = $priceRange ? $priceRange->min_price : 0;
+    //     $maxPrice = $priceRange ? $priceRange->max_price : 0;
+
+    //     // Locations pour l'affichage
+    //     $locations = Property::with(['ville.locationImage', 'pays'])
+    //         ->where('etat', 'actif')
+    //         ->get()
+    //         ->groupBy(function ($property) {
+    //             return $property->pays?->label . ' - ' . $property->ville?->label;
+    //         });
+
+    //     // Meilleurs appartements
+    //     $bestApparts = $this->getBestAppartements();
+
+    //     // Commodités uniques
+    //     $commodities = $this->getUniqueCommodities();
+
+    //     return view('welcome', compact(
+    //         'typeAppart',
+    //         'categories',
+    //         'cities',
+    //         'testimonials',
+    //         'minPrice',
+    //         'maxPrice',
+    //         'locations',
+    //         'bestApparts',
+    //         'commodities'
+    //     ));
+    // }
+
+    // private function searchResults(Request $request)
+    // {
+    //     // 📋 Récupération des types d'appartements actifs
+    //     $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
+
+    //     // ⚙️ Paramètres de pagination et de requête
+    //     $perPage = $request->get('perPage', 6);
+    //     $page = $request->get('page', 1);
+    //     $latitudeUser = $request->get('lat');
+    //     $longitudeUser = $request->get('lng');
+    //     $search = trim($request->input('search'));
+    //     $location = trim($request->input('location'));
+    //     $type = $request->input('type');
+    //     $ville = $request->input('ville');
+    //     $categorie = $request->input('categorie');
+    //     $rooms = $request->input('rooms');
+    //     $bathrooms = $request->input('bathrooms');
+    //     $sejour = $request->input('sejour');
+    //     $commodities = $request->input('commodities');
+    //     $min_price = "";
+    //     $max_price = "";
+
+    //     $isSearch = ($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities);
+
+    //     if ($isSearch) {
+    //         $min_price = $request->input('min_price');
+    //         $max_price = $request->input('max_price');
+    //     }
+
+    //     // créer une session pour stocker les latitudeUser et longitudeUser
+    //     session(['lat' => $latitudeUser, 'lng' => $longitudeUser]);
+
+    //     // Si l'utilisateur fait une recherche manuelle, on ignore la géolocalisation
+    //     $useGeolocation = !($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities || $min_price || $max_price);
+
+    //     // Requête de base : on récupère les appartements actifs via la table Search
+    //     $searchQuery = Search::query();
+
+    //     if ($search) {
+    //         $fulltextConditions = array_filter([$search]);
+    //         if (!empty($fulltextConditions)) {
+    //             $match = implode(' ', $fulltextConditions);
+    //             $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
+    //         }
+    //     }
+
+    //     // Filtres
+    //     if ($location) {
+    //         $searchQuery->where('query', 'like', "%$location%");
+    //     }
+    //     if ($ville) {
+    //         $searchQuery->where('query', 'like', "%$ville%");
+    //     }
+    //     if ($categorie) {
+    //         $searchQuery->where('query', 'like', "%$categorie%");
+    //     }
+    //     if ($type) {
+    //         $searchQuery->where('query', 'like', "%$type%");
+    //     }
+    //     if ($rooms) {
+    //         $searchQuery->where('query', 'like', "%$rooms%");
+    //     }
+    //     if ($bathrooms) {
+    //         $searchQuery->where('query', 'like', "%$bathrooms%");
+    //     }
+    //     if ($sejour) {
+    //         $searchQuery->where('query', 'like', "%$sejour%");
+    //     }
+
+    //     // 🔹 Récupérer les appartements qui correspondent à TOUS les filtres
+    //     $appartementIds = $searchQuery->pluck('appartement_uuid')->toArray();
+
+    //     // Requête de base : appartements actifs et disponibles
+    //     $query = Appartement::with('property')
+    //         ->where('appartements.etat', 'actif')
+    //         ->where('appartements.nbr_available', '>', 0)
+    //         ->whereIn('appartements.uuid', $appartementIds);
+
+    //     if ($request->filled('commodities')) {
+    //         foreach ($request->commodities as $commodity) {
+    //             $query->where('appartements.commodities', 'LIKE', '%' . $commodity . '%');
+    //         }
+    //     }
+
+    //     if ($request->filled(['min_price', 'max_price'])) {
+    //         $query->whereHas('tarifications', function ($q) use ($request) {
+    //             $q->whereBetween('price', [
+    //                 $request->min_price,
+    //                 $request->max_price
+    //             ]);
+    //         });
+    //     }
+
+    //     // Calcul de distance Haversine et tri si coordonnées fournies
+    //     if ($latitudeUser && $longitudeUser) {
+    //         $haversine = "(6371 * acos(cos(radians($latitudeUser)) 
+    //         * cos(radians(properties.latitude)) 
+    //         * cos(radians(properties.longitude) - radians($longitudeUser)) 
+    //         + sin(radians($latitudeUser)) 
+    //         * sin(radians(properties.latitude))))";
+
+    //         if ($useGeolocation) {
+    //             $query->whereHas('property', function ($q) use ($haversine) {
+    //                 $q->whereRaw("$haversine <= 10");
+    //             });
+
+    //             $query->with(['property' => function ($q) use ($haversine) {
+    //                 $q->addSelect([
+    //                     'properties.*',
+    //                     DB::raw("$haversine AS distance_km")
+    //                 ]);
+    //             }])
+    //                 ->join('properties', 'appartements.property_uuid', '=', 'properties.uuid')
+    //                 ->select('appartements.*', DB::raw("$haversine AS distance_km"))
+    //                 ->orderBy('distance_km', 'asc')
+    //                 ->orderBy('appartements.created_at', 'desc');
+    //         } else {
+    //             $query->with(['property' => function ($q) use ($haversine) {
+    //                 $q->addSelect([
+    //                     'properties.*',
+    //                     DB::raw("$haversine AS distance_km")
+    //                 ]);
+    //             }]);
+    //         }
+    //     } else {
+    //         $query->orderBy('appartements.created_at', 'desc');
+    //     }
+
+    //     // Pagination des appartements
+    //     $apparts = $query->paginate($perPage, ['*'], 'page', $page);
+
+    //     // Reverse geocoding POUR CHAQUE APPARTEMENT
+    //     foreach ($apparts as $appart) {
+    //         if ($appart->property && $appart->property->latitude && $appart->property->longitude) {
+    //             $location = GeocodingService::reverse(
+    //                 $appart->property->latitude,
+    //                 $appart->property->longitude
+    //             );
+
+    //             if ($location) {
+    //                 $appart->property->setAttribute('country_name',  $location['country']);
+    //                 $appart->property->setAttribute('city_name',     $location['city']);
+    //                 $appart->property->setAttribute('district_name', $location['district']);
+    //                 $appart->property->setAttribute('address_name',  $location['address']);
+    //                 $appart->property->setAttribute('commune_name',  $location['commune']);
+    //             }
+    //         }
+    //     }
+
+    //     // Récupérer les commodités uniques pour les filtres
+    //     $commodities = $this->getUniqueCommodities();
+
+    //     return response()->json([
+    //         'html' => view('partials.appartements-list', compact('apparts', 'commodities'))->render(),
+    //         'pagination' => view('partials.pagination', compact('apparts'))->render(),
+    //         'count' => $apparts->total(),
+    //         'current_page' => $apparts->currentPage(),
+    //         'last_page' => $apparts->lastPage(),
+    //         'per_page' => $apparts->perPage()
+    //     ]);
+    // }
+
+    // private function getBestAppartements()
+    // {
+    //     return Appartement::withCount('reservations')
+    //         ->where('appartements.etat', 'actif')
+    //         ->where('appartements.nbr_available', '>', 0)
+    //         ->orderByDesc('reservations_count')
+    //         ->take(3)
+    //         ->with('tarifications')
+    //         ->get()
+    //         ->map(function ($appart) {
+    //             if ($appart->property && $appart->property->latitude && $appart->property->longitude) {
+    //                 $location = GeocodingService::reverse(
+    //                     $appart->property->latitude,
+    //                     $appart->property->longitude
+    //                 );
+    //                 if ($location) {
+    //                     $appart->property->setAttribute('country_name', $location['country']);
+    //                     $appart->property->setAttribute('city_name', $location['city']);
+    //                     $appart->property->setAttribute('district_name', $location['district']);
+    //                     $appart->property->setAttribute('address_name', $location['address']);
+    //                     $appart->property->setAttribute('commune_name', $location['commune']);
+    //                 }
+    //             }
+    //             return $appart;
+    //         });
+    // }
+
+    // private function getUniqueCommodities()
+    // {
+    //     $commodities = [];
+    //     $appartements = Appartement::where('etat', 'actif')->get();
+    //     foreach ($appartements as $appartement) {
+    //         if (!empty($appartement->commodities)) {
+    //             $commodities = array_merge($commodities, array_map('trim', explode(',', $appartement->commodities)));
+    //         }
+    //     }
+    //     return array_unique($commodities);
+    // }
+
     public function index(Request $request)
     {
-        // Si c'est une requête AJAX, retourner uniquement les données JSON
-        if ($request->ajax() || $request->wantsJson()) {
+        // Vérification plus robuste pour AJAX
+        $isAjax = $request->ajax() || 
+                  $request->wantsJson() || 
+                  $request->has('ajax') || 
+                  $request->header('X-Requested-With') === 'XMLHttpRequest';
+        
+        if ($isAjax) {
             return $this->searchResults($request);
         }
 
@@ -497,9 +754,6 @@ class PagesController extends Controller
 
     private function searchResults(Request $request)
     {
-        // 📋 Récupération des types d'appartements actifs
-        $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
-
         // ⚙️ Paramètres de pagination et de requête
         $perPage = $request->get('perPage', 6);
         $page = $request->get('page', 1);
@@ -635,11 +889,11 @@ class PagesController extends Controller
                 );
 
                 if ($location) {
-                    $appart->property->setAttribute('country_name',  $location['country']);
-                    $appart->property->setAttribute('city_name',     $location['city']);
-                    $appart->property->setAttribute('district_name', $location['district']);
-                    $appart->property->setAttribute('address_name',  $location['address']);
-                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                    $appart->property->setAttribute('country_name',  $location['country'] ?? '');
+                    $appart->property->setAttribute('city_name',     $location['city'] ?? '');
+                    $appart->property->setAttribute('district_name', $location['district'] ?? '');
+                    $appart->property->setAttribute('address_name',  $location['address'] ?? '');
+                    $appart->property->setAttribute('commune_name',  $location['commune'] ?? '');
                 }
             }
         }
@@ -673,11 +927,11 @@ class PagesController extends Controller
                         $appart->property->longitude
                     );
                     if ($location) {
-                        $appart->property->setAttribute('country_name', $location['country']);
-                        $appart->property->setAttribute('city_name', $location['city']);
-                        $appart->property->setAttribute('district_name', $location['district']);
-                        $appart->property->setAttribute('address_name', $location['address']);
-                        $appart->property->setAttribute('commune_name', $location['commune']);
+                        $appart->property->setAttribute('country_name', $location['country'] ?? '');
+                        $appart->property->setAttribute('city_name', $location['city'] ?? '');
+                        $appart->property->setAttribute('district_name', $location['district'] ?? '');
+                        $appart->property->setAttribute('address_name', $location['address'] ?? '');
+                        $appart->property->setAttribute('commune_name', $location['commune'] ?? '');
                     }
                 }
                 return $appart;
@@ -695,6 +949,7 @@ class PagesController extends Controller
         }
         return array_unique($commodities);
     }
+
 
 
     public function getAllProperties()
