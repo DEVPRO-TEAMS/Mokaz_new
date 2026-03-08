@@ -188,36 +188,6 @@
         </div>
     </section>
 
-    {{-- @php
-        // ✅ Fonctions utilitaires définies une seule fois
-        if (!function_exists('formatTemps')) {
-            function formatTemps($minutes)
-            {
-                if (!$minutes) {
-                    return null;
-                }
-                if ($minutes >= 60) {
-                    $heures = floor($minutes / 60);
-                    $mins = round($minutes % 60);
-                    return $heures . 'h ' . ($mins > 0 ? $mins . 'min' : '');
-                }
-                return round($minutes) . ' min';
-            }
-        }
-
-        if (!function_exists('formatDistance')) {
-            function formatDistance($km)
-            {
-                if (!$km) {
-                    return null;
-                }
-                $metres = $km * 1000;
-                return $metres >= 1000
-                    ? number_format($km, 1, ',', ' ') . ' km'
-                    : number_format($metres, 0, ',', ' ') . ' m';
-            }
-        }
-    @endphp --}}
     <!-- Recommended -->
     {{-- <section class="flat-section-v5 bg-surface flat-recommended flat-recommended-v2">
         <div class="container">
@@ -1345,17 +1315,17 @@
             });
         }
 
-        // Gestion du bouton "Avancé"
-        const advancedFilterBtn = document.querySelector('.filter-advanced');
-        const advancedFilterSection = document.querySelector('.wd-search-form');
+        // // Gestion du bouton "Avancé"
+        // const advancedFilterBtn = document.querySelector('.filter-advanced');
+        // const advancedFilterSection = document.querySelector('.wd-search-form');
         
-        if (advancedFilterBtn && advancedFilterSection) {
-            advancedFilterBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                advancedFilterSection.classList.toggle('show');
-                this.classList.toggle('active');
-            });
-        }
+        // if (advancedFilterBtn && advancedFilterSection) {
+        //     advancedFilterBtn.addEventListener('click', function(e) {
+        //         e.preventDefault();
+        //         advancedFilterSection.classList.toggle('show');
+        //         this.classList.toggle('active');
+        //     });
+        // }
 
         // Gestion du bouton "Réinitialiser" dans les filtres avancés (si existant)
         const resetAdvancedBtn = document.querySelector('#resetAdvancedFilters');
