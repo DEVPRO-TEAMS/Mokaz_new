@@ -668,7 +668,7 @@
         </div>
     </section>
 
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             const latInput = document.getElementById('user_lat');
             const lngInput = document.getElementById('user_lng');
@@ -715,7 +715,7 @@
                 }
             }
         });
-    </script>
+    </script> --}}
 
     {{-- <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1403,7 +1403,7 @@
     }
 </script> --}}
 
-{{-- <script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Éviter la double initialisation
         if (window.appInitialized) return;
@@ -1740,7 +1740,7 @@
             }
         });
     }
-</script> --}}
+</script>
 
 <style>
     .wd-search-form {
