@@ -1403,7 +1403,7 @@
     }
 </script> --}}
 
-<script>
+{{-- <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Éviter la double initialisation
         if (window.appInitialized) return;
@@ -1740,7 +1740,7 @@
             }
         });
     }
-</script>
+</script> --}}
 
 <style>
     .wd-search-form {
