@@ -1180,10 +1180,10 @@
             if (paginationContainer && data.pagination) {
                 paginationContainer.innerHTML = data.pagination;
             }
-            // if (resultCount && data.count !== undefined) {
-            //     resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
-            //     resultCount.style.display = 'block';
-            // }
+            if (resultCount && data.count !== undefined) {
+                resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+                resultCount.style.display = 'block';
+            }
             
             // Initialiser les composants après mise à jour
             initializeComponents();
