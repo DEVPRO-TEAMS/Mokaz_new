@@ -1180,10 +1180,10 @@
             if (paginationContainer && data.pagination) {
                 paginationContainer.innerHTML = data.pagination;
             }
-            if (resultCount && data.count !== undefined) {
-                resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
-                resultCount.style.display = 'block';
-            }
+            // if (resultCount && data.count !== undefined) {
+            //     resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+            //     resultCount.style.display = 'block';
+            // }
             
             // Initialiser les composants après mise à jour
             initializeComponents();
@@ -1314,18 +1314,6 @@
                 window.history.pushState({}, '', window.location.pathname);
             });
         }
-
-        // // Gestion du bouton "Avancé"
-        // const advancedFilterBtn = document.querySelector('.filter-advanced');
-        // const advancedFilterSection = document.querySelector('.wd-search-form');
-        
-        // if (advancedFilterBtn && advancedFilterSection) {
-        //     advancedFilterBtn.addEventListener('click', function(e) {
-        //         e.preventDefault();
-        //         advancedFilterSection.classList.toggle('show');
-        //         this.classList.toggle('active');
-        //     });
-        // }
 
         // Gestion du bouton "Réinitialiser" dans les filtres avancés (si existant)
         const resetAdvancedBtn = document.querySelector('#resetAdvancedFilters');
