@@ -1732,7 +1732,7 @@
 
 <style>
     .wd-search-form {
-        max-height: 0;
+        /* max-height: 0; */
         overflow: hidden;
         transition: max-height 0.3s ease-out;
     }
