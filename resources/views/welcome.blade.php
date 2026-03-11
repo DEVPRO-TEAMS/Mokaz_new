@@ -1091,7 +1091,7 @@
         }
     </script> --}}
 
-    <script>
+    {{-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
@@ -1254,10 +1254,10 @@
                 if (paginationContainer && data.pagination) {
                     paginationContainer.innerHTML = data.pagination;
                 }
-                if (resultCount && data.count !== undefined) {
-                    resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
-                    resultCount.style.display = 'block';
-                }
+                // if (resultCount && data.count !== undefined) {
+                //     resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+                //     resultCount.style.display = 'block';
+                // }
                 
                 // Initialiser les composants après mise à jour
                 initializeComponents();
@@ -1583,7 +1583,500 @@
                 }
             }, 500);
         };
-    </script>
+    </script> --}}
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+function initializeApp() {
+    const form = document.getElementById('searchAppartsForm');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const paginationContainer = document.getElementById('paginationContainer');
+    const resultCount = document.getElementById('resultCount');
+    const loader = document.getElementById('resultsLoader');
+    const latInput = document.getElementById('user_lat');
+    const lngInput = document.getElementById('user_lng');
+    
+    let isSubmitting = false;
+    let currentRequest = null;
+    let searchTimeout = null;
+    let currentPage = 1;
+
+    // Chargement initial des résultats
+    loadInitialResults();
+
+    function loadInitialResults() {
+        showLoader();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.toString()) {
+            // Récupérer la page courante depuis l'URL
+            if (urlParams.has('page')) {
+                currentPage = parseInt(urlParams.get('page'));
+            }
+            
+            // Remplir le formulaire avec les paramètres de l'URL
+            for (let [key, value] of urlParams.entries()) {
+                if (key === 'page') continue; // Ne pas remplir le champ page
+                
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        if (key === 'commodities[]') {
+                            const checkbox = form.querySelector(`input[value="${value}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        }
+                    } else {
+                        input.value = value;
+                    }
+                }
+            }
+        }
+        
+        handleGeolocationAndSearch();
+    }
+
+    function handleGeolocationAndSearch() {
+        if (!latInput.value || !lngInput.value) {
+            if (navigator.geolocation) {
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        latInput.value = position.coords.latitude;
+                        lngInput.value = position.coords.longitude;
+                        performSearch(currentPage);
+                    }, 
+                    function(error) {
+                        console.warn("Erreur de géolocalisation:", error);
+                        performSearch(currentPage);
+                    }, 
+                    options
+                );
+            } else {
+                console.warn("Géolocalisation non supportée");
+                performSearch(currentPage);
+            }
+        } else {
+            performSearch(currentPage);
+        }
+    }
+
+    function performSearch(page = 1) {
+        if (isSubmitting) return;
+        
+        if (currentRequest) {
+            currentRequest.abort();
+        }
+        
+        isSubmitting = true;
+        showLoader();
+
+        const controller = new AbortController();
+        currentRequest = controller;
+
+        // Mettre à jour la page courante
+        currentPage = page;
+
+        // Récupérer les données du formulaire
+        const formData = new FormData(form);
+        
+        // Construire les paramètres
+        const params = new URLSearchParams();
+        
+        // Ajouter tous les champs du formulaire
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                if (key === 'commodities[]') {
+                    params.append('commodities[]', value);
+                } else {
+                    params.set(key, value);
+                }
+            }
+        }
+        
+        // Ajouter la page
+        params.set('page', page);
+        
+        // Ajouter le flag AJAX
+        params.set('ajax', 'true');
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+        
+        console.log('Recherche avec page:', page); // Pour déboguer
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+            },
+            signal: controller.signal
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau');
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateResults(data);
+            updateURL(params);
+            isSubmitting = false;
+            hideLoader();
+            currentRequest = null;
+        })
+        .catch(error => {
+            if (error.name === 'AbortError') {
+                console.log('Requête annulée');
+            } else {
+                console.error('Erreur:', error);
+                showError('Une erreur est survenue lors de la recherche');
+            }
+            isSubmitting = false;
+            hideLoader();
+            currentRequest = null;
+        });
+    }
+
+    function updateResults(data) {
+        if (resultsContainer) {
+            resultsContainer.innerHTML = data.html;
+        }
+        if (paginationContainer && data.pagination) {
+            paginationContainer.innerHTML = data.pagination;
+            
+            // Réattacher les événements de pagination
+            attachPaginationEvents();
+        }
+        if (resultCount && data.count !== undefined) {
+            resultCount.textContent = data.count + ' résultat(s) trouvé(s)';
+            resultCount.style.display = 'block';
+        }
+        
+        initializeComponents();
+    }
+
+    function attachPaginationEvents() {
+        // Sélectionner tous les boutons de pagination
+        const paginationLinks = document.querySelectorAll('.pagination-link');
+        
+        paginationLinks.forEach(link => {
+            link.removeEventListener('click', paginationClickHandler);
+            link.addEventListener('click', paginationClickHandler);
+        });
+    }
+
+    function paginationClickHandler(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const page = this.dataset.page;
+        if (page) {
+            console.log('Changement de page vers:', page);
+            performSearch(page);
+            
+            // Scroll vers les résultats
+            if (resultsContainer) {
+                resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+    }
+
+    function updateURL(params) {
+        const newUrl = window.location.pathname + '?' + params.toString();
+        window.history.pushState({ path: newUrl, page: 'search', pageNum: currentPage }, '', newUrl);
+    }
+
+    function showLoader() {
+        if (loader) {
+            loader.style.display = 'block';
+        }
+        if (resultsContainer) {
+            resultsContainer.style.opacity = '0.6';
+            resultsContainer.style.transition = 'opacity 0.3s';
+            resultsContainer.style.pointerEvents = 'none';
+        }
+        if (paginationContainer) {
+            paginationContainer.style.opacity = '0.6';
+            paginationContainer.style.pointerEvents = 'none';
+        }
+    }
+
+    function hideLoader() {
+        if (loader) {
+            loader.style.display = 'none';
+        }
+        if (resultsContainer) {
+            resultsContainer.style.opacity = '1';
+            resultsContainer.style.pointerEvents = 'auto';
+        }
+        if (paginationContainer) {
+            paginationContainer.style.opacity = '1';
+            paginationContainer.style.pointerEvents = 'auto';
+        }
+    }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        errorDiv.role = 'alert';
+        errorDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        if (resultsContainer) {
+            resultsContainer.parentNode.insertBefore(errorDiv, resultsContainer);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    }
+
+    function initializeComponents() {
+        // Tooltips Bootstrap
+        if (typeof bootstrap !== 'undefined') {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        }
+
+        // Nice Select
+        if (typeof NiceSelect !== 'undefined') {
+            NiceSelect.bind(document.querySelectorAll('.nice-select'));
+        }
+
+        // Slider de prix
+        if (typeof initPriceSlider === 'function') {
+            initPriceSlider();
+        }
+
+        // WOW.js pour les animations
+        if (typeof WOW !== 'undefined' && window.wow) {
+            window.wow.sync();
+        }
+    }
+
+    // ============================================
+    // ÉCOUTEURS DE CHANGEMENT
+    // ============================================
+    
+    function triggerSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1; // Revenir à la page 1 lors d'un nouveau filtre
+            handleGeolocationAndSearch();
+        }, 500);
+    }
+
+    // Écouter les changements sur tous les champs
+    const allInputs = form.querySelectorAll('input, select, textarea');
+    
+    allInputs.forEach(input => {
+        if (input.type === 'text' || input.type === 'number' || input.type === 'search' || input.type === 'email' || input.tagName === 'TEXTAREA') {
+            input.addEventListener('input', triggerSearch);
+            input.addEventListener('change', triggerSearch);
+        }
+        else if (input.tagName === 'SELECT') {
+            input.addEventListener('change', triggerSearch);
+        }
+        else if (input.type === 'checkbox' || input.type === 'radio') {
+            input.addEventListener('change', triggerSearch);
+        }
+        else if (input.type !== 'hidden') {
+            input.addEventListener('change', triggerSearch);
+        }
+    });
+
+    // Observer pour le slider de prix
+    const minPriceInput = document.getElementById('min_price');
+    const maxPriceInput = document.getElementById('max_price');
+    
+    if (minPriceInput && maxPriceInput) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                    triggerSearch();
+                }
+            });
+        });
+        
+        observer.observe(minPriceInput, { attributes: true });
+        observer.observe(maxPriceInput, { attributes: true });
+    }
+
+    // Bouton de soumission
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            handleGeolocationAndSearch();
+        });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        currentPage = 1;
+        handleGeolocationAndSearch();
+    });
+
+    // Bouton de réinitialisation
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'resetFiltersBtn' || e.target.closest('#resetFiltersBtn')) {
+            e.preventDefault();
+            form.reset();
+            latInput.value = '';
+            lngInput.value = '';
+            currentPage = 1;
+            handleGeolocationAndSearch();
+        }
+    });
+
+    // Bouton "Voir tous les biens"
+    const viewAllBtn = document.querySelector('a[href*="appart.all"]');
+    if (viewAllBtn) {
+        viewAllBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            form.reset();
+            latInput.value = '';
+            lngInput.value = '';
+            currentPage = 1;
+            
+            handleGeolocationAndSearch();
+            window.history.pushState({}, '', window.location.pathname);
+        });
+    }
+
+    // Navigation historique
+    window.addEventListener('popstate', function(event) {
+        if (event.state && event.state.page === 'search') {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Récupérer la page depuis l'URL
+            if (urlParams.has('page')) {
+                currentPage = parseInt(urlParams.get('page'));
+            } else {
+                currentPage = 1;
+            }
+            
+            // Mettre à jour le formulaire
+            for (let [key, value] of urlParams.entries()) {
+                if (key === 'page') continue;
+                
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        if (key === 'commodities[]') {
+                            const checkbox = form.querySelector(`input[value="${value}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        }
+                    } else {
+                        input.value = value;
+                    }
+                }
+            }
+            
+            handleGeolocationAndSearch();
+        }
+    });
+
+    // Initialiser le slider de prix
+    if (typeof initPriceSlider === 'function') {
+        initPriceSlider();
+    }
+}
+
+// Fonctions utilitaires globales
+window.formatDistance = function(km) {
+    if (!km) return null;
+    const metres = km * 1000;
+    return metres >= 1000
+        ? km.toFixed(1).replace('.', ',') + ' km'
+        : Math.round(metres).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' m';
+};
+
+window.formatTemps = function(minutes) {
+    if (!minutes) return null;
+    if (minutes >= 60) {
+        const heures = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        return heures + 'h ' + (mins > 0 ? mins + 'min' : '');
+    }
+    return Math.round(minutes) + ' min';
+};
+
+// Initialisation des animations WOW
+if (typeof WOW !== 'undefined') {
+    window.wow = new WOW({
+        boxClass: 'wow',
+        animateClass: 'animated',
+        offset: 0,
+        mobile: true,
+        live: true
+    });
+    window.wow.init();
+}
+
+// Fonction d'initialisation du slider de prix
+function initPriceSlider() {
+    const sliderRange = document.getElementById('slider-range');
+    if (!sliderRange) return;
+    
+    const minPrice = document.getElementById('min_price');
+    const maxPrice = document.getElementById('max_price');
+    const minDisplay = document.getElementById('slider-range-value1');
+    const maxDisplay = document.getElementById('slider-range-value2');
+    
+    if (typeof jQuery !== 'undefined' && jQuery.ui && jQuery.ui.slider) {
+        if (jQuery('#slider-range').hasClass('ui-slider')) {
+            jQuery('#slider-range').slider('destroy');
+        }
+        
+        jQuery('#slider-range').slider({
+            range: true,
+            min: parseInt(sliderRange.dataset.min) || 0,
+            max: parseInt(sliderRange.dataset.max) || 1000000,
+            values: [
+                parseInt(minPrice.value) || parseInt(sliderRange.dataset.min) || 0,
+                parseInt(maxPrice.value) || parseInt(sliderRange.dataset.max) || 1000000
+            ],
+            slide: function(event, ui) {
+                minDisplay.textContent = ui.values[0].toLocaleString() + ' FCFA';
+                maxDisplay.textContent = ui.values[1].toLocaleString() + ' FCFA';
+                minPrice.value = ui.values[0];
+                maxPrice.value = ui.values[1];
+            },
+            change: function(event, ui) {
+                if (window.triggerSearch) {
+                    window.triggerSearch();
+                }
+            }
+        });
+        
+        const values = jQuery('#slider-range').slider('values');
+        minDisplay.textContent = values[0].toLocaleString() + ' FCFA';
+        maxDisplay.textContent = values[1].toLocaleString() + ' FCFA';
+    }
+}
+
+window.triggerSearch = function() {
+    if (window.searchTimeout) {
+        clearTimeout(window.searchTimeout);
+    }
+    window.searchTimeout = setTimeout(() => {
+        if (typeof handleGeolocationAndSearch === 'function') {
+            handleGeolocationAndSearch();
+        }
+    }, 500);
+};
+</script>
 
     <style>
         .wd-search-form {

@@ -1,6 +1,6 @@
 @if ($apparts->hasPages())
     <nav class="d-flex justify-items-center justify-content-between">
-        <div class="d-non flex-fill d-flex align-items-center justify-content-between">
+        <div class="d-flex flex-fill align-items-center justify-content-between">
             <div class="m-auto">
                 <ul class="pagination">
                     {{-- Previous Page Link --}}
@@ -10,7 +10,7 @@
                         </li>
                     @else
                         <li class="page-item">
-                            <button type="button" class="page-link" data-page="{{ $apparts->currentPage() - 1 }}" rel="prev" aria-label="Précédent">&lsaquo;</button>
+                            <button type="button" class="page-link pagination-link" data-page="{{ $apparts->currentPage() - 1 }}" rel="prev" aria-label="Précédent">&lsaquo;</button>
                         </li>
                     @endif
 
@@ -29,7 +29,7 @@
                                 </li>
                             @else
                                 <li class="page-item">
-                                    <button type="button" class="page-link" data-page="{{ $i }}">{{ $i }}</button>
+                                    <button type="button" class="page-link pagination-link" data-page="{{ $i }}">{{ $i }}</button>
                                 </li>
                             @endif
                         {{-- Points de suspension après la première page --}}
@@ -37,18 +37,20 @@
                             <li class="page-item disabled">
                                 <span class="page-link">...</span>
                             </li>
+                        @break($i === 2 && $currentPage > 3)
                         {{-- Points de suspension avant la dernière page --}}
                         @elseif ($i === $lastPage - 1 && $currentPage < $lastPage - 2)
                             <li class="page-item disabled">
                                 <span class="page-link">...</span>
                             </li>
+                        @break($i === $lastPage - 1 && $currentPage < $lastPage - 2)
                         @endif
                     @endfor
 
                     {{-- Next Page Link --}}
                     @if ($apparts->hasMorePages())
                         <li class="page-item">
-                            <button type="button" class="page-link" data-page="{{ $apparts->currentPage() + 1 }}" rel="next" aria-label="Suivant">&rsaquo;</button>
+                            <button type="button" class="page-link pagination-link" data-page="{{ $apparts->currentPage() + 1 }}" rel="next" aria-label="Suivant">&rsaquo;</button>
                         </li>
                     @else
                         <li class="page-item disabled" aria-disabled="true">
