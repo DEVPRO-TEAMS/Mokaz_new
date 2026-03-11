@@ -1732,8 +1732,8 @@
 
 <style>
     .wd-search-form {
-        /* max-height: 0; */
-        overflow: hidden;
+        /* max-height: 0; 
+        overflow: hidden;*/
         transition: max-height 0.3s ease-out;
     }
 
@@ -1742,9 +1742,9 @@
         transition: max-height 0.5s ease-in;
     }
 
-    .filter-advanced.active .icon-faders {
+    /* .filter-advanced.active .icon-faders {
         transform: rotate(180deg);
-    }
+    } */
 
     .icon-faders {
         transition: transform 0.3s;

@@ -279,170 +279,170 @@ class PagesController extends Controller
     //     return view('welcome', compact('apparts', 'bestApparts', 'typeAppart', 'locations', 'testimonials', 'categories', 'cities', 'commodities', 'minPrice', 'maxPrice'));
     // }
 
-    // public function search(Request $request)
-    // {
-    //     // 📋 Récupération des types d'appartements actifs
-    //     $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
+    public function search(Request $request)
+    {
+        // 📋 Récupération des types d'appartements actifs
+        $typeAppart = Variable::where(['type' => 'type_of_appart', 'etat' => 'actif'])->get();
 
-    //     // ⚙️ Paramètres de pagination et de requête
-    //     $perPage = $request->get('perPage', 6);
-    //     $latitudeUser = $request->get('lat');
-    //     $longitudeUser = $request->get('lng');
-    //     $search = trim($request->input('search'));
-    //     $location = trim($request->input('location'));
-    //     $type = $request->input('type');
-    //     $ville = $request->input('ville');
-    //     $categorie = $request->input('categorie');
-    //     $rooms = $request->input('rooms');
-    //     $bathrooms = $request->input('bathrooms');
-    //     $sejour = $request->input('sejour');
-    //     $commodities = $request->input('commodities');
-    //     $min_price = "";
-    //     $max_price = "";
+        // ⚙️ Paramètres de pagination et de requête
+        $perPage = $request->get('perPage', 6);
+        $latitudeUser = $request->get('lat');
+        $longitudeUser = $request->get('lng');
+        $search = trim($request->input('search'));
+        $location = trim($request->input('location'));
+        $type = $request->input('type');
+        $ville = $request->input('ville');
+        $categorie = $request->input('categorie');
+        $rooms = $request->input('rooms');
+        $bathrooms = $request->input('bathrooms');
+        $sejour = $request->input('sejour');
+        $commodities = $request->input('commodities');
+        $min_price = "";
+        $max_price = "";
 
-    //     $isSearch = ($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities);
+        $isSearch = ($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities);
 
-    //     if ($isSearch) {
-    //         $min_price = $request->input('min_price');
-    //         $max_price = $request->input('max_price');
-    //     }
+        if ($isSearch) {
+            $min_price = $request->input('min_price');
+            $max_price = $request->input('max_price');
+        }
 
-    //     // créer une session pour stocker les latitudeUser et longitudeUser
-    //     session(['lat' => $latitudeUser, 'lng' => $longitudeUser]);
+        // créer une session pour stocker les latitudeUser et longitudeUser
+        session(['lat' => $latitudeUser, 'lng' => $longitudeUser]);
 
-    //     // Si l'utilisateur fait une recherche manuelle, on ignore la géolocalisation
-    //     $useGeolocation = !($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities || $min_price || $max_price);
+        // Si l'utilisateur fait une recherche manuelle, on ignore la géolocalisation
+        $useGeolocation = !($search || $location || $type || $categorie || $ville || $rooms || $bathrooms || $sejour || $commodities || $min_price || $max_price);
 
-    //     // Requête de base : on récupère les appartements actifs via la table Search
-    //     $searchQuery = Search::query();
+        // Requête de base : on récupère les appartements actifs via la table Search
+        $searchQuery = Search::query();
 
-    //     if ($search) {
-    //         $fulltextConditions = array_filter([$search]);
-    //         if (!empty($fulltextConditions)) {
-    //             $match = implode(' ', $fulltextConditions);
-    //             $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
-    //         }
-    //     }
+        if ($search) {
+            $fulltextConditions = array_filter([$search]);
+            if (!empty($fulltextConditions)) {
+                $match = implode(' ', $fulltextConditions);
+                $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
+            }
+        }
 
-    //     // Filtres
-    //     if ($location) {
-    //         $searchQuery->where('query', 'like', "%$location%");
-    //     }
-    //     if ($ville) {
-    //         $searchQuery->where('query', 'like', "%$ville%");
-    //     }
-    //     if ($categorie) {
-    //         $searchQuery->where('query', 'like', "%$categorie%");
-    //     }
-    //     if ($type) {
-    //         $searchQuery->where('query', 'like', "%$type%");
-    //     }
-    //     if ($rooms) {
-    //         $searchQuery->where('query', 'like', "%$rooms%");
-    //     }
-    //     if ($bathrooms) {
-    //         $searchQuery->where('query', 'like', "%$bathrooms%");
-    //     }
-    //     if ($sejour) {
-    //         $searchQuery->where('query', 'like', "%$sejour%");
-    //     }
+        // Filtres
+        if ($location) {
+            $searchQuery->where('query', 'like', "%$location%");
+        }
+        if ($ville) {
+            $searchQuery->where('query', 'like', "%$ville%");
+        }
+        if ($categorie) {
+            $searchQuery->where('query', 'like', "%$categorie%");
+        }
+        if ($type) {
+            $searchQuery->where('query', 'like', "%$type%");
+        }
+        if ($rooms) {
+            $searchQuery->where('query', 'like', "%$rooms%");
+        }
+        if ($bathrooms) {
+            $searchQuery->where('query', 'like', "%$bathrooms%");
+        }
+        if ($sejour) {
+            $searchQuery->where('query', 'like', "%$sejour%");
+        }
 
-    //     // 🔹 Récupérer les appartements qui correspondent à TOUS les filtres
-    //     $appartementIds = $searchQuery->pluck('appartement_uuid')->toArray();
+        // 🔹 Récupérer les appartements qui correspondent à TOUS les filtres
+        $appartementIds = $searchQuery->pluck('appartement_uuid')->toArray();
 
-    //     // Requête de base : appartements actifs et disponibles
-    //     $query = Appartement::with('property')
-    //         ->where('appartements.etat', 'actif')
-    //         ->where('appartements.nbr_available', '>', 0)
-    //         ->whereIn('appartements.uuid', $appartementIds);
+        // Requête de base : appartements actifs et disponibles
+        $query = Appartement::with('property')
+            ->where('appartements.etat', 'actif')
+            ->where('appartements.nbr_available', '>', 0)
+            ->whereIn('appartements.uuid', $appartementIds);
 
-    //     if ($request->filled('commodities')) {
-    //         foreach ($request->commodities as $commodity) {
-    //             $query->where('appartements.commodities', 'LIKE', '%' . $commodity . '%');
-    //         }
-    //     }
+        if ($request->filled('commodities')) {
+            foreach ($request->commodities as $commodity) {
+                $query->where('appartements.commodities', 'LIKE', '%' . $commodity . '%');
+            }
+        }
 
-    //     if ($request->filled(['min_price', 'max_price'])) {
-    //         $query->whereHas('tarifications', function ($q) use ($request) {
-    //             $q->whereBetween('price', [
-    //                 $request->min_price,
-    //                 $request->max_price
-    //             ]);
-    //         });
-    //     }
+        if ($request->filled(['min_price', 'max_price'])) {
+            $query->whereHas('tarifications', function ($q) use ($request) {
+                $q->whereBetween('price', [
+                    $request->min_price,
+                    $request->max_price
+                ]);
+            });
+        }
 
-    //     // Calcul de distance Haversine et tri si coordonnées fournies
-    //     if ($latitudeUser && $longitudeUser) {
-    //         $haversine = "(6371 * acos(cos(radians($latitudeUser)) 
-    //     * cos(radians(properties.latitude)) 
-    //     * cos(radians(properties.longitude) - radians($longitudeUser)) 
-    //     + sin(radians($latitudeUser)) 
-    //     * sin(radians(properties.latitude))))";
+        // Calcul de distance Haversine et tri si coordonnées fournies
+        if ($latitudeUser && $longitudeUser) {
+            $haversine = "(6371 * acos(cos(radians($latitudeUser)) 
+        * cos(radians(properties.latitude)) 
+        * cos(radians(properties.longitude) - radians($longitudeUser)) 
+        + sin(radians($latitudeUser)) 
+        * sin(radians(properties.latitude))))";
 
-    //         if ($useGeolocation) {
-    //             $query->whereHas('property', function ($q) use ($haversine) {
-    //                 $q->whereRaw("$haversine <= 10");
-    //             });
+            if ($useGeolocation) {
+                $query->whereHas('property', function ($q) use ($haversine) {
+                    $q->whereRaw("$haversine <= 10");
+                });
 
-    //             $query->with(['property' => function ($q) use ($haversine) {
-    //                 $q->addSelect([
-    //                     'properties.*',
-    //                     DB::raw("$haversine AS distance_km")
-    //                 ]);
-    //             }])
-    //                 ->join('properties', 'appartements.property_uuid', '=', 'properties.uuid')
-    //                 ->select('appartements.*', DB::raw("$haversine AS distance_km"))
-    //                 ->orderBy('distance_km', 'asc')
-    //                 ->orderBy('appartements.created_at', 'desc');
-    //         } else {
-    //             $query->with(['property' => function ($q) use ($haversine) {
-    //                 $q->addSelect([
-    //                     'properties.*',
-    //                     DB::raw("$haversine AS distance_km")
-    //                 ]);
-    //             }]);
-    //         }
-    //     } else {
-    //         $query->orderBy('appartements.created_at', 'desc');
-    //     }
+                $query->with(['property' => function ($q) use ($haversine) {
+                    $q->addSelect([
+                        'properties.*',
+                        DB::raw("$haversine AS distance_km")
+                    ]);
+                }])
+                    ->join('properties', 'appartements.property_uuid', '=', 'properties.uuid')
+                    ->select('appartements.*', DB::raw("$haversine AS distance_km"))
+                    ->orderBy('distance_km', 'asc')
+                    ->orderBy('appartements.created_at', 'desc');
+            } else {
+                $query->with(['property' => function ($q) use ($haversine) {
+                    $q->addSelect([
+                        'properties.*',
+                        DB::raw("$haversine AS distance_km")
+                    ]);
+                }]);
+            }
+        } else {
+            $query->orderBy('appartements.created_at', 'desc');
+        }
 
-    //     // Pagination des appartements
-    //     $apparts = $query->paginate($perPage);
+        // Pagination des appartements
+        $apparts = $query->paginate($perPage);
 
-    //     // Reverse geocoding POUR CHAQUE APPARTEMENT
-    //     foreach ($apparts as $appart) {
-    //         if ($appart->property && $appart->property->latitude && $appart->property->longitude) {
-    //             $location = GeocodingService::reverse(
-    //                 $appart->property->latitude,
-    //                 $appart->property->longitude
-    //             );
+        // Reverse geocoding POUR CHAQUE APPARTEMENT
+        foreach ($apparts as $appart) {
+            if ($appart->property && $appart->property->latitude && $appart->property->longitude) {
+                $location = GeocodingService::reverse(
+                    $appart->property->latitude,
+                    $appart->property->longitude
+                );
 
-    //             if ($location) {
-    //                 $appart->property->setAttribute('country_name',  $location['country']);
-    //                 $appart->property->setAttribute('city_name',     $location['city']);
-    //                 $appart->property->setAttribute('district_name', $location['district']);
-    //                 $appart->property->setAttribute('address_name',  $location['address']);
-    //                 $appart->property->setAttribute('commune_name',  $location['commune']);
-    //             }
-    //         }
-    //     }
+                if ($location) {
+                    $appart->property->setAttribute('country_name',  $location['country']);
+                    $appart->property->setAttribute('city_name',     $location['city']);
+                    $appart->property->setAttribute('district_name', $location['district']);
+                    $appart->property->setAttribute('address_name',  $location['address']);
+                    $appart->property->setAttribute('commune_name',  $location['commune']);
+                }
+            }
+        }
 
-    //     // Récupérer les données supplémentaires nécessaires pour les filtres
-    //     $commodities = [];
-    //     foreach (Appartement::where('etat', 'actif')->get() as $appartement) {
-    //         if (!empty($appartement->commodities)) {
-    //             $commodities = array_merge($commodities, array_map('trim', explode(',', $appartement->commodities)));
-    //         }
-    //     }
-    //     $commodities = array_unique($commodities);
+        // Récupérer les données supplémentaires nécessaires pour les filtres
+        $commodities = [];
+        foreach (Appartement::where('etat', 'actif')->get() as $appartement) {
+            if (!empty($appartement->commodities)) {
+                $commodities = array_merge($commodities, array_map('trim', explode(',', $appartement->commodities)));
+            }
+        }
+        $commodities = array_unique($commodities);
 
-    //     // Retourner la vue partielle pour les résultats et la pagination
-    //     return response()->json([
-    //         'html' => view('partials.appartements-list', compact('apparts', 'commodities'))->render(),
-    //         'pagination' => view('partials.pagination', compact('apparts'))->render(),
-    //         'count' => $apparts->total()
-    //     ]);
-    // }
+        // Retourner la vue partielle pour les résultats et la pagination
+        return response()->json([
+            'html' => view('partials.appartements-list', compact('apparts', 'commodities'))->render(),
+            'pagination' => view('partials.pagination', compact('apparts'))->render(),
+            'count' => $apparts->total()
+        ]);
+    }
 
     public function index(Request $request)
     {
@@ -533,12 +533,24 @@ class PagesController extends Controller
         // Requête de base : on récupère les appartements actifs via la table Search
         $searchQuery = Search::query();
 
-        if ($search) {
-            $fulltextConditions = array_filter([$search]);
-            if (!empty($fulltextConditions)) {
-                $match = implode(' ', $fulltextConditions);
-                $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
-            }
+        // if ($search) {
+        //     $fulltextConditions = array_filter([$search]);
+        //     if (!empty($fulltextConditions)) {
+        //         $match = implode(' ', $fulltextConditions);
+        //         $searchQuery->whereRaw("MATCH(query) AGAINST(? IN BOOLEAN MODE)", [$match]);
+        //     }
+        // }
+
+        if (!empty($search)) {
+
+            $terms = preg_split('/\s+/', trim($search));
+
+            $searchQuery->where(function ($query) use ($terms) {
+                foreach ($terms as $term) {
+                    $query->where('query', 'LIKE', "%{$term}%");
+                }
+            });
+
         }
 
         // Filtres
