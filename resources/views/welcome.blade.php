@@ -1604,7 +1604,7 @@ function initializeApp() {
     let searchTimeout = null;
     let currentPage = 1;
 
-    // Chargement initial des résultats
+    // Chargement initial
     loadInitialResults();
 
     function loadInitialResults() {
@@ -1613,14 +1613,14 @@ function initializeApp() {
         const urlParams = new URLSearchParams(window.location.search);
         
         if (urlParams.toString()) {
-            // Récupérer la page courante depuis l'URL
+            // Récupérer la page depuis l'URL
             if (urlParams.has('page')) {
                 currentPage = parseInt(urlParams.get('page'));
             }
             
-            // Remplir le formulaire avec les paramètres de l'URL
+            // Remplir le formulaire
             for (let [key, value] of urlParams.entries()) {
-                if (key === 'page') continue; // Ne pas remplir le champ page
+                if (key === 'page') continue;
                 
                 const input = form.querySelector(`[name="${key}"]`);
                 if (input) {
@@ -1642,12 +1642,6 @@ function initializeApp() {
     function handleGeolocationAndSearch() {
         if (!latInput.value || !lngInput.value) {
             if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                };
-
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
                         latInput.value = position.coords.latitude;
@@ -1657,11 +1651,14 @@ function initializeApp() {
                     function(error) {
                         console.warn("Erreur de géolocalisation:", error);
                         performSearch(currentPage);
-                    }, 
-                    options
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
                 );
             } else {
-                console.warn("Géolocalisation non supportée");
                 performSearch(currentPage);
             }
         } else {
@@ -1678,20 +1675,15 @@ function initializeApp() {
         
         isSubmitting = true;
         showLoader();
+        currentPage = page;
 
         const controller = new AbortController();
         currentRequest = controller;
 
-        // Mettre à jour la page courante
-        currentPage = page;
-
-        // Récupérer les données du formulaire
-        const formData = new FormData(form);
-        
         // Construire les paramètres
+        const formData = new FormData(form);
         const params = new URLSearchParams();
         
-        // Ajouter tous les champs du formulaire
         for (let [key, value] of formData.entries()) {
             if (value) {
                 if (key === 'commodities[]') {
@@ -1702,15 +1694,10 @@ function initializeApp() {
             }
         }
         
-        // Ajouter la page
         params.set('page', page);
-        
-        // Ajouter le flag AJAX
         params.set('ajax', 'true');
 
         const url = `${window.location.pathname}?${params.toString()}`;
-        
-        console.log('Recherche avec page:', page); // Pour déboguer
 
         fetch(url, {
             method: 'GET',
@@ -1753,8 +1740,6 @@ function initializeApp() {
         }
         if (paginationContainer && data.pagination) {
             paginationContainer.innerHTML = data.pagination;
-            
-            // Réattacher les événements de pagination
             attachPaginationEvents();
         }
         if (resultCount && data.count !== undefined) {
@@ -1766,12 +1751,12 @@ function initializeApp() {
     }
 
     function attachPaginationEvents() {
-        // Sélectionner tous les boutons de pagination
-        const paginationLinks = document.querySelectorAll('.pagination-link');
+        // Sélectionner tous les boutons de pagination (avec classe pagination-btn ou data-page)
+        const paginationBtns = document.querySelectorAll('.pagination-btn, .page-link[data-page]');
         
-        paginationLinks.forEach(link => {
-            link.removeEventListener('click', paginationClickHandler);
-            link.addEventListener('click', paginationClickHandler);
+        paginationBtns.forEach(btn => {
+            btn.removeEventListener('click', paginationClickHandler);
+            btn.addEventListener('click', paginationClickHandler);
         });
     }
 
@@ -1781,10 +1766,8 @@ function initializeApp() {
         
         const page = this.dataset.page;
         if (page) {
-            console.log('Changement de page vers:', page);
             performSearch(page);
             
-            // Scroll vers les résultats
             if (resultsContainer) {
                 resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
@@ -1797,12 +1780,9 @@ function initializeApp() {
     }
 
     function showLoader() {
-        if (loader) {
-            loader.style.display = 'block';
-        }
+        if (loader) loader.style.display = 'block';
         if (resultsContainer) {
             resultsContainer.style.opacity = '0.6';
-            resultsContainer.style.transition = 'opacity 0.3s';
             resultsContainer.style.pointerEvents = 'none';
         }
         if (paginationContainer) {
@@ -1812,9 +1792,7 @@ function initializeApp() {
     }
 
     function hideLoader() {
-        if (loader) {
-            loader.style.display = 'none';
-        }
+        if (loader) loader.style.display = 'none';
         if (resultsContainer) {
             resultsContainer.style.opacity = '1';
             resultsContainer.style.pointerEvents = 'auto';
@@ -1828,10 +1806,9 @@ function initializeApp() {
     function showError(message) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
-        errorDiv.role = 'alert';
         errorDiv.innerHTML = `
             ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
         
         if (resultsContainer) {
@@ -1843,12 +1820,14 @@ function initializeApp() {
     function initializeComponents() {
         // Tooltips Bootstrap
         if (typeof bootstrap !== 'undefined') {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                try { new bootstrap.Tooltip(el); } catch(e) {}
+            });
         }
 
         // Nice Select
         if (typeof NiceSelect !== 'undefined') {
-            NiceSelect.bind(document.querySelectorAll('.nice-select'));
+            try { NiceSelect.bind(document.querySelectorAll('.nice-select')); } catch(e) {}
         }
 
         // Slider de prix
@@ -1856,9 +1835,9 @@ function initializeApp() {
             initPriceSlider();
         }
 
-        // WOW.js pour les animations
+        // WOW.js
         if (typeof WOW !== 'undefined' && window.wow) {
-            window.wow.sync();
+            try { window.wow.sync(); } catch(e) {}
         }
     }
 
@@ -1869,26 +1848,20 @@ function initializeApp() {
     function triggerSearch() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
-            currentPage = 1; // Revenir à la page 1 lors d'un nouveau filtre
+            currentPage = 1; // Revenir à la page 1
             handleGeolocationAndSearch();
         }, 500);
     }
 
-    // Écouter les changements sur tous les champs
+    // Écouter tous les champs du formulaire
     const allInputs = form.querySelectorAll('input, select, textarea');
     
     allInputs.forEach(input => {
-        if (input.type === 'text' || input.type === 'number' || input.type === 'search' || input.type === 'email' || input.tagName === 'TEXTAREA') {
+        if (input.type === 'text' || input.type === 'number' || input.type === 'search' || input.tagName === 'TEXTAREA') {
             input.addEventListener('input', triggerSearch);
             input.addEventListener('change', triggerSearch);
         }
-        else if (input.tagName === 'SELECT') {
-            input.addEventListener('change', triggerSearch);
-        }
-        else if (input.type === 'checkbox' || input.type === 'radio') {
-            input.addEventListener('change', triggerSearch);
-        }
-        else if (input.type !== 'hidden') {
+        else if (input.tagName === 'SELECT' || input.type === 'checkbox' || input.type === 'radio') {
             input.addEventListener('change', triggerSearch);
         }
     });
@@ -1898,16 +1871,9 @@ function initializeApp() {
     const maxPriceInput = document.getElementById('max_price');
     
     if (minPriceInput && maxPriceInput) {
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
-                    triggerSearch();
-                }
-            });
-        });
-        
-        observer.observe(minPriceInput, { attributes: true });
-        observer.observe(maxPriceInput, { attributes: true });
+        const observer = new MutationObserver(() => triggerSearch());
+        observer.observe(minPriceInput, { attributes: true, attributeFilter: ['value'] });
+        observer.observe(maxPriceInput, { attributes: true, attributeFilter: ['value'] });
     }
 
     // Bouton de soumission
@@ -1943,12 +1909,10 @@ function initializeApp() {
     if (viewAllBtn) {
         viewAllBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            
             form.reset();
             latInput.value = '';
             lngInput.value = '';
             currentPage = 1;
-            
             handleGeolocationAndSearch();
             window.history.pushState({}, '', window.location.pathname);
         });
@@ -1958,13 +1922,7 @@ function initializeApp() {
     window.addEventListener('popstate', function(event) {
         if (event.state && event.state.page === 'search') {
             const urlParams = new URLSearchParams(window.location.search);
-            
-            // Récupérer la page depuis l'URL
-            if (urlParams.has('page')) {
-                currentPage = parseInt(urlParams.get('page'));
-            } else {
-                currentPage = 1;
-            }
+            currentPage = urlParams.has('page') ? parseInt(urlParams.get('page')) : 1;
             
             // Mettre à jour le formulaire
             for (let [key, value] of urlParams.entries()) {
@@ -1987,13 +1945,13 @@ function initializeApp() {
         }
     });
 
-    // Initialiser le slider de prix
+    // Initialiser le slider
     if (typeof initPriceSlider === 'function') {
         initPriceSlider();
     }
 }
 
-// Fonctions utilitaires globales
+// Fonctions utilitaires
 window.formatDistance = function(km) {
     if (!km) return null;
     const metres = km * 1000;
@@ -2012,7 +1970,7 @@ window.formatTemps = function(minutes) {
     return Math.round(minutes) + ' min';
 };
 
-// Initialisation des animations WOW
+// WOW.js
 if (typeof WOW !== 'undefined') {
     window.wow = new WOW({
         boxClass: 'wow',
@@ -2024,7 +1982,7 @@ if (typeof WOW !== 'undefined') {
     window.wow.init();
 }
 
-// Fonction d'initialisation du slider de prix
+// Slider de prix
 function initPriceSlider() {
     const sliderRange = document.getElementById('slider-range');
     if (!sliderRange) return;
@@ -2053,10 +2011,8 @@ function initPriceSlider() {
                 minPrice.value = ui.values[0];
                 maxPrice.value = ui.values[1];
             },
-            change: function(event, ui) {
-                if (window.triggerSearch) {
-                    window.triggerSearch();
-                }
+            change: function() {
+                if (window.triggerSearch) window.triggerSearch();
             }
         });
         
@@ -2067,9 +2023,7 @@ function initPriceSlider() {
 }
 
 window.triggerSearch = function() {
-    if (window.searchTimeout) {
-        clearTimeout(window.searchTimeout);
-    }
+    if (window.searchTimeout) clearTimeout(window.searchTimeout);
     window.searchTimeout = setTimeout(() => {
         if (typeof handleGeolocationAndSearch === 'function') {
             handleGeolocationAndSearch();
