@@ -364,6 +364,10 @@
 
             <!-- Conteneur de la pagination -->
             <div class="nav-pagination pt-4" id="paginationContainer"></div>
+
+            <div class="text-center pt-4">
+                <a href="{{ route('appart.all') }}" class="tf-btn primary size-1">Voir tous les biens</a>
+            </div>
         </div>
     </section>
 
