@@ -415,212 +415,491 @@ class ReservationController extends Controller
         return view('reservations.show', compact('reservation'));
     }
 
-    public function autoRemiseReservation()
-    {
-        DB::beginTransaction();
-        try {
-            $now = Carbon::now();
-            $results = [];
+    // public function autoRemiseReservation()
+    // {
+    //     DB::beginTransaction();
+    //     try {
+    //         $now = Carbon::now();
+    //         $results = [];
 
-            // Récupérer les réservations avec paiement
-            $reservationsHavingPaiement = Reservation::whereIn('status', ['pending', 'confirmed'])
-                ->whereHas('paiement')
-                ->with('appartement')
-                ->get()
-                ->map(function ($r) {
-                    $r->has_payment = true;
-                    return $r;
-                });
+    //         // Récupérer les réservations avec paiement
+    //         $reservationsHavingPaiement = Reservation::whereIn('status', ['pending', 'confirmed'])
+    //             ->whereHas('paiement')
+    //             ->with('appartement')
+    //             ->get()
+    //             ->map(function ($r) {
+    //                 $r->has_payment = true;
+    //                 return $r;
+    //             });
 
-            // Récupérer les réservations sans paiement
-            $reservationsDoesntHavePaiement = Reservation::whereIn('status', ['pending', 'confirmed', 'cancelled'])
-                ->whereDoesntHave('paiement')
-                ->with('appartement')
-                ->get()
-                ->map(function ($r) {
-                    $r->has_payment = false;
-                    return $r;
-                });
+    //         // Récupérer les réservations sans paiement
+    //         $reservationsDoesntHavePaiement = Reservation::whereIn('status', ['pending', 'confirmed', 'cancelled'])
+    //             ->whereDoesntHave('paiement')
+    //             ->with('appartement')
+    //             ->get()
+    //             ->map(function ($r) {
+    //                 $r->has_payment = false;
+    //                 return $r;
+    //             });
 
-            // Log::info("Réservation avec paiement: " . json_encode($reservationsHavingPaiement));
-            Log::info("Nombre de réservation avec paiement: " . $reservationsHavingPaiement->count());
-            // Log::info("Réservation sans paiement: " . json_encode($reservationsDoesntHavePaiement));
-            Log::info("Nombre de réservation sans paiement: " . $reservationsDoesntHavePaiement->count());
-            // Fusion des deux collections
-            $reservations = $reservationsHavingPaiement->merge($reservationsDoesntHavePaiement);
+    //         // Log::info("Réservation avec paiement: " . json_encode($reservationsHavingPaiement));
+    //         Log::info("Nombre de réservation avec paiement: " . $reservationsHavingPaiement->count());
+    //         Log::info("Liste des réservation avec paiement: " . json_encode($reservationsHavingPaiement->pluck('code')->toArray()));
+    //         // Log::info("Réservation sans paiement: " . json_encode($reservationsDoesntHavePaiement));
+    //         Log::info("Nombre de réservation sans paiement: " . $reservationsDoesntHavePaiement->count());
+    //         Log::info("Liste des réservation sans paiement: " . json_encode($reservationsDoesntHavePaiement->pluck('code')->toArray()));
+    //         // Fusion des deux collections
+    //         $reservations = $reservationsHavingPaiement->merge($reservationsDoesntHavePaiement);
 
-            foreach ($reservations as $reservation) {
-                $times = $this->getReservationThreshold($reservation);
+    //         Log::info("Nombre de toutes les réservation: " . $reservations->count());
+    //         Log::info("Liste des toutes les réservation: " . json_encode($reservations->pluck('code')->toArray()));
 
-                // 1. Cas No Show (10% du temps écoulé sans arrivée)
-                if ($now->greaterThan($times['threshold']) && !$reservation->is_present) {
+    //         foreach ($reservations as $reservation) {
+    //             $times = $this->getReservationThreshold($reservation);
 
-                    if ($reservation->has_payment) {
-                        // Annulation avec libération d'appartement
-                        $this->releaseAppartement($reservation, "no_show");
+    //             // 1. Cas No Show (10% du temps écoulé sans arrivée)
+    //             if ($now->greaterThan($times['threshold']) && !$reservation->is_present) {
 
-                        // Envoi SMS + email
-                        $this->notifyCancellation($reservation);
+    //                 if ($reservation->has_payment) {
+    //                     // Annulation avec libération d'appartement
+    //                     $this->releaseAppartement($reservation, "no_show");
 
-                        Log::info("Réservation {$reservation->code} annulée automatiquement (no-show avec paiement)");
+    //                     // Envoi SMS + email
+    //                     $this->notifyCancellation($reservation);
 
-                        $results[] = [
-                            'reservation' => $reservation->code,
-                            'status' => 'cancelled',
-                            'message' => 'Annulée (no-show avec paiement)'
-                        ];
-                    } else {
-                        // Suppression directe si aucun paiement
-                        $reservation->delete();
-                        Log::info("Réservation {$reservation->code} supprimée automatiquement (no-show sans paiement)");
+    //                     Log::info("Réservation {$reservation->code} annulée automatiquement (no-show avec paiement)");
 
-                        $results[] = [
-                            'reservation' => $reservation->code,
-                            'status' => 'deleted',
-                            'message' => 'Supprimée (no-show sans paiement)'
-                        ];
-                    }
-                    continue;
+    //                     $results[] = [
+    //                         'reservation' => $reservation->code,
+    //                         'status' => 'cancelled',
+    //                         'message' => 'Annulée (no-show avec paiement)'
+    //                     ];
+    //                 } else {
+    //                     // Suppression directe si aucun paiement
+    //                     $reservation->delete();
+    //                     Log::info("Réservation {$reservation->code} supprimée automatiquement (no-show sans paiement)");
+
+    //                     $results[] = [
+    //                         'reservation' => $reservation->code,
+    //                         'status' => 'deleted',
+    //                         'message' => 'Supprimée (no-show sans paiement)'
+    //                     ];
+    //                 }
+    //                 continue;
+    //             }
+
+    //             // 2. Cas séjour terminé
+    //             if ($now->greaterThanOrEqualTo($times['end']) && $reservation->is_present) {
+
+    //                 if ($reservation->has_payment) {
+    //                     $this->releaseAppartement($reservation, "finished");
+
+    //                     $this->notifyFinished($reservation);
+
+    //                     Log::info("Réservation {$reservation->code} libérée automatiquement (séjour terminé)");
+
+    //                     $results[] = [
+    //                         'reservation' => $reservation->code,
+    //                         'status' => 'completed',
+    //                         'message' => 'Séjour terminé'
+    //                     ];
+    //                 } else {
+    //                     // Suppression directe si aucun paiement
+    //                     $reservation->delete();
+    //                     Log::info("Réservation {$reservation->code} supprimée automatiquement (séjour terminé sans paiement)");
+
+    //                     $results[] = [
+    //                         'reservation' => $reservation->code,
+    //                         'status' => 'deleted',
+    //                         'message' => 'Supprimée (séjour terminé sans paiement)'
+    //                     ];
+    //                 }
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => count($results) > 0
+    //                 ? "Certaines réservations ont été mises à jour"
+    //                 : "Aucune réservation à libérer",
+    //             'details' => $results
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Reservation auto remise failed: ' . $e->getMessage());
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => "Erreur lors de la remise automatique",
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    // /**
+    //  * Calculer les seuils temporels de la réservation
+    //  */
+    // private function getReservationThreshold($reservation)
+    // {
+    //     $start = Carbon::parse($reservation->start_time);
+    //     $end = Carbon::parse($reservation->end_time);
+    //     $totalMinutes = $start->diffInMinutes($end);
+    //     $threshold = $start->copy()->addMinutes($totalMinutes * 0.1);
+
+    //     return compact('start', 'end', 'threshold');
+    // }
+
+    // /**
+    //  * Notification annulation (SMS + Email)
+    //  */
+    // private function notifyCancellation($reservation)
+    // {
+    //     // SMS
+    //     $cleanPhone = preg_replace('/\D/', '', $reservation->phone);
+    //     $last10 = strlen($cleanPhone) >= 10 ? substr($cleanPhone, -10) : $cleanPhone;
+    //     $phone = "225" . $last10;
+
+    //     $message = "Bonjour, votre réservation {$reservation->code} a été annulée. Merci de votre compréhension. — " . env('APP_NAME');
+    //     $this->sendSms($phone, $message);
+
+    //     // Email
+    //     if (!empty($reservation->email)) {
+    //         $emailSubject = "❌ Réservation annulée";
+    //         $emailContent = view('mail.cancel_reservation', [
+    //             'reservation' => $reservation
+    //         ])->render();
+
+    //         $emailData = [
+    //             'title' => 'Annulation de votre réservation - ' . env('APP_NAME'),
+    //             'message' => $emailContent,
+    //             'status' => $reservation->status,
+    //             'code' => $reservation->code,
+    //             'url' => url($reservation->receipt->filepath ?? '#'),
+    //             'buttonText' => 'Télécharger le reçu',
+    //         ];
+
+    //         Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
+    //     }
+    // }
+
+    // /**
+    //  * Notification séjour terminé
+    //  */
+    // private function notifyFinished($reservation)
+    // {
+    //     if (!empty($reservation->email)) {
+    //         $emailSubject = "✅ Séjour terminé";
+    //         $emailContent = view('mail.finishe_reservation', [
+    //             'reservation' => $reservation
+    //         ])->render();
+
+    //         $emailData = [
+    //             'title' => 'Merci pour votre séjour - ' . env('APP_NAME'),
+    //             'message' => $emailContent,
+    //             'status' => $reservation->status,
+    //             'code' => $reservation->code,
+    //             'url' => $reservation->appartement
+    //                 ? url('/detail/appartement/' . $reservation->appartement->uuid)
+    //                 : url('/'),
+    //             'buttonText' => "Noter l'hébergement",
+    //         ];
+
+    //         Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
+    //     }
+    // }
+    // /**
+    //  * Fonction utilitaire pour remettre un appartement disponible
+    //  */
+    // private function releaseAppartement($reservation, $reason)
+    // {
+    //     // Incrémenter le stock de l’appartement
+    //     $appartement = $reservation->appartement;
+    //     if ($appartement) {
+    //         $appartement->nbr_available = (int) $appartement->nbr_available + 1;
+    //         $appartement->save();
+    //     }
+
+    //     // Supprimer l'attribut temporaire avant la sauvegarde
+    //     unset($reservation->has_payment);
+    //     // Mettre à jour la réservation
+    //     $reservation->status = ($reason == "finished") ? "completed" : "cancelled";
+    //     // $reservation->etat = "libéré";
+    //     $reservation->save();
+    // }
+
+    /**
+ * Libération automatique des réservations
+ */
+public function autoRemiseReservation()
+{
+    DB::beginTransaction();
+    try {
+        $now = Carbon::now();
+        $results = [];
+
+        // Récupérer les réservations avec paiement
+        $reservationsHavingPaiement = Reservation::whereIn('status', ['pending', 'confirmed'])
+            ->whereHas('paiement')
+            ->with('appartement')
+            ->get()
+            ->map(function ($r) {
+                $r->has_payment = true;
+                return $r;
+            });
+
+        // Récupérer les réservations sans paiement
+        $reservationsDoesntHavePaiement = Reservation::whereIn('status', ['pending', 'confirmed', 'cancelled'])
+            ->whereDoesntHave('paiement')
+            ->with('appartement')
+            ->get()
+            ->map(function ($r) {
+                $r->has_payment = false;
+                return $r;
+            });
+
+        Log::info("Nombre de réservations avec paiement: " . $reservationsHavingPaiement->count());
+        Log::info("Liste des réservations avec paiement: " . json_encode($reservationsHavingPaiement->pluck('code')->toArray()));
+        Log::info("Nombre de réservations sans paiement: " . $reservationsDoesntHavePaiement->count());
+        Log::info("Liste des réservations sans paiement: " . json_encode($reservationsDoesntHavePaiement->pluck('code')->toArray()));
+        
+        // Fusion des deux collections
+        $reservations = $reservationsHavingPaiement->merge($reservationsDoesntHavePaiement);
+
+        Log::info("Nombre total de réservations: " . $reservations->count());
+        Log::info("Liste de toutes les réservations: " . json_encode($reservations->pluck('code')->toArray()));
+
+        foreach ($reservations as $reservation) {
+            $times = $this->getReservationThreshold($reservation);
+
+            // 1. Cas No Show (10% du temps écoulé sans arrivée)
+            if ($now->greaterThan($times['threshold']) && !$reservation->is_present) {
+
+                if ($reservation->has_payment) {
+                    // Annulation avec libération d'appartement
+                    $this->releaseAppartement($reservation, "no_show");
+
+                    // Envoi SMS + email
+                    $this->notifyCancellation($reservation);
+
+                    Log::info("Réservation {$reservation->code} annulée automatiquement (no-show avec paiement)");
+
+                    $results[] = [
+                        'reservation' => $reservation->code,
+                        'status' => 'cancelled',
+                        'message' => 'Annulée (no-show avec paiement)'
+                    ];
+                } else {
+                    // Suppression directe si aucun paiement
+                    $reservation->delete();
+                    Log::info("Réservation {$reservation->code} supprimée automatiquement (no-show sans paiement)");
+
+                    $results[] = [
+                        'reservation' => $reservation->code,
+                        'status' => 'deleted',
+                        'message' => 'Supprimée (no-show sans paiement)'
+                    ];
                 }
-
-                // 2. Cas séjour terminé
-                if ($now->greaterThanOrEqualTo($times['end']) && $reservation->is_present) {
-
-                    if ($reservation->has_payment) {
-                        $this->releaseAppartement($reservation, "finished");
-
-                        $this->notifyFinished($reservation);
-
-                        Log::info("Réservation {$reservation->code} libérée automatiquement (séjour terminé)");
-
-                        $results[] = [
-                            'reservation' => $reservation->code,
-                            'status' => 'completed',
-                            'message' => 'Séjour terminé'
-                        ];
-                    } else {
-                        // Suppression directe si aucun paiement
-                        $reservation->delete();
-                        Log::info("Réservation {$reservation->code} supprimée automatiquement (séjour terminé sans paiement)");
-
-                        $results[] = [
-                            'reservation' => $reservation->code,
-                            'status' => 'deleted',
-                            'message' => 'Supprimée (séjour terminé sans paiement)'
-                        ];
-                    }
-                }
+                continue;
             }
 
-            DB::commit();
+            // 2. Cas séjour terminé
+            if ($now->greaterThanOrEqualTo($times['end']) && $reservation->is_present) {
 
-            return response()->json([
-                'success' => true,
-                'message' => count($results) > 0
-                    ? "Certaines réservations ont été mises à jour"
-                    : "Aucune réservation à libérer",
-                'details' => $results
-            ]);
+                if ($reservation->has_payment) {
+                    $this->releaseAppartement($reservation, "finished");
+
+                    $this->notifyFinished($reservation);
+
+                    Log::info("Réservation {$reservation->code} libérée automatiquement (séjour terminé)");
+
+                    $results[] = [
+                        'reservation' => $reservation->code,
+                        'status' => 'completed',
+                        'message' => 'Séjour terminé'
+                    ];
+                } else {
+                    // Suppression directe si aucun paiement
+                    $reservation->delete();
+                    Log::info("Réservation {$reservation->code} supprimée automatiquement (séjour terminé sans paiement)");
+
+                    $results[] = [
+                        'reservation' => $reservation->code,
+                        'status' => 'deleted',
+                        'message' => 'Supprimée (séjour terminé sans paiement)'
+                    ];
+                }
+            }
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => count($results) > 0
+                ? "Certaines réservations ont été mises à jour"
+                : "Aucune réservation à libérer",
+            'details' => $results
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Échec de la libération automatique des réservations: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => "Erreur lors de la libération automatique",
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Calculer les seuils temporels de la réservation
+ */
+private function getReservationThreshold($reservation)
+{
+    $start = Carbon::parse($reservation->start_time);
+    $end = Carbon::parse($reservation->end_time);
+    $totalMinutes = $start->diffInMinutes($end);
+    $threshold = $start->copy()->addMinutes($totalMinutes * 0.1);
+
+    return compact('start', 'end', 'threshold');
+}
+
+/**
+ * Notification d'annulation (SMS + Email)
+ */
+private function notifyCancellation($reservation)
+{
+    try {
+        // Envoi SMS
+        $this->sendSmsNotification($reservation, "annulation");
+    } catch (\Exception $e) {
+        Log::warning("Échec de l'envoi SMS pour la réservation {$reservation->code}: " . $e->getMessage());
+    }
+
+    try {
+        // Envoi Email - avec validation
+        $this->sendEmailNotification($reservation, "annulation");
+    } catch (\Exception $e) {
+        Log::warning("Échec de l'envoi d'email pour la réservation {$reservation->code}: " . $e->getMessage());
+    }
+}
+
+/**
+ * Notification de séjour terminé
+ */
+    private function notifyFinished($reservation)
+    {
+        try {
+            // Envoi Email - avec validation
+            $this->sendEmailNotification($reservation, "fin");
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Reservation auto remise failed: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => "Erreur lors de la remise automatique",
-                'error' => $e->getMessage()
-            ], 500);
+            Log::warning("Échec de l'envoi d'email pour la réservation {$reservation->code}: " . $e->getMessage());
         }
     }
 
     /**
-     * Calculer les seuils temporels de la réservation
+     * Envoi de notification SMS
      */
-    private function getReservationThreshold($reservation)
+    private function sendSmsNotification($reservation, $type)
     {
-        $start = Carbon::parse($reservation->start_time);
-        $end = Carbon::parse($reservation->end_time);
-        $totalMinutes = $start->diffInMinutes($end);
-        $threshold = $start->copy()->addMinutes($totalMinutes * 0.1);
+        if (empty($reservation->phone)) {
+            Log::info("Pas de numéro de téléphone pour la réservation {$reservation->code}, SMS non envoyé");
+            return;
+        }
 
-        return compact('start', 'end', 'threshold');
-    }
-
-    /**
-     * Notification annulation (SMS + Email)
-     */
-    private function notifyCancellation($reservation)
-    {
-        // SMS
         $cleanPhone = preg_replace('/\D/', '', $reservation->phone);
         $last10 = strlen($cleanPhone) >= 10 ? substr($cleanPhone, -10) : $cleanPhone;
         $phone = "225" . $last10;
 
-        $message = "Bonjour, votre réservation {$reservation->code} a été annulée. Merci de votre compréhension. — " . env('APP_NAME');
-        $this->sendSms($phone, $message);
+        $message = $type === "annulation" 
+            ? "Bonjour, votre réservation {$reservation->code} a été annulée. Merci de votre compréhension. — " . env('APP_NAME')
+            : "Bonjour, votre séjour {$reservation->code} est terminé. Merci de votre visite! — " . env('APP_NAME');
 
-        // Email
-        if (!empty($reservation->email)) {
+        $this->sendSms($phone, $message);
+    }
+
+/**
+ * Envoi de notification Email avec validation
+ */
+    private function sendEmailNotification($reservation, $type)
+    {
+        // Vérifier si l'email existe et est valide
+        if (empty($reservation->email) || !filter_var($reservation->email, FILTER_VALIDATE_EMAIL)) {
+            Log::info("Email invalide ou manquant pour la réservation {$reservation->code}: '" . ($reservation->email ?? 'null') . "', email non envoyé");
+            return;
+        }
+
+        if ($type === "annulation") {
             $emailSubject = "❌ Réservation annulée";
             $emailContent = view('mail.cancel_reservation', [
                 'reservation' => $reservation
             ])->render();
+
+            $url = '#';
+            if (isset($reservation->receipt) && $reservation->receipt && isset($reservation->receipt->filepath)) {
+                $url = url($reservation->receipt->filepath);
+            }
 
             $emailData = [
                 'title' => 'Annulation de votre réservation - ' . env('APP_NAME'),
                 'message' => $emailContent,
                 'status' => $reservation->status,
                 'code' => $reservation->code,
-                'url' => url($reservation->receipt->filepath ?? '#'),
+                'url' => $url,
                 'buttonText' => 'Télécharger le reçu',
             ];
-
-            Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
-        }
-    }
-
-    /**
-     * Notification séjour terminé
-     */
-    private function notifyFinished($reservation)
-    {
-        if (!empty($reservation->email)) {
+        } else {
             $emailSubject = "✅ Séjour terminé";
             $emailContent = view('mail.finishe_reservation', [
                 'reservation' => $reservation
             ])->render();
+
+            $url = url('/');
+            if ($reservation->appartement && isset($reservation->appartement->uuid)) {
+                $url = url('/detail/appartement/' . $reservation->appartement->uuid);
+            }
 
             $emailData = [
                 'title' => 'Merci pour votre séjour - ' . env('APP_NAME'),
                 'message' => $emailContent,
                 'status' => $reservation->status,
                 'code' => $reservation->code,
-                'url' => $reservation->appartement
-                    ? url('/detail/appartement/' . $reservation->appartement->uuid)
-                    : url('/'),
+                'url' => $url,
                 'buttonText' => "Noter l'hébergement",
             ];
+        }
 
+        try {
             Mail::to($reservation->email)->send(new reservatierNotifier($emailData, $emailSubject));
+            Log::info("Email de {$type} envoyé avec succès à {$reservation->email} pour la réservation {$reservation->code}");
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'envoi de l'email de {$type} pour la réservation {$reservation->code}: " . $e->getMessage());
+            throw $e; // Re-lancer l'exception pour la gestion au niveau supérieur
         }
     }
+
     /**
      * Fonction utilitaire pour remettre un appartement disponible
      */
     private function releaseAppartement($reservation, $reason)
     {
-        // Incrémenter le stock de l’appartement
+        // Incrémenter le stock de l'appartement
         $appartement = $reservation->appartement;
         if ($appartement) {
             $appartement->nbr_available = (int) $appartement->nbr_available + 1;
             $appartement->save();
+            Log::info("Appartement {$appartement->id} libéré, nouvelle disponibilité: {$appartement->nbr_available}");
         }
 
         // Supprimer l'attribut temporaire avant la sauvegarde
         unset($reservation->has_payment);
+        
         // Mettre à jour la réservation
         $reservation->status = ($reason == "finished") ? "completed" : "cancelled";
-        // $reservation->etat = "libéré";
         $reservation->save();
+        
+        Log::info("Réservation {$reservation->code} mise à jour avec le statut: {$reservation->status}");
     }
 
     // Créer une nouvelle réservation

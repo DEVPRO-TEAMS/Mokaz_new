@@ -324,8 +324,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     {{-- <script src=https://touchpay.gutouch.net/touchpayv2/script/touchpaynr/prod_touchpay-0.0.1.js  type="text/javascript"></script> --}}
 
-    {{-- <script src=https://touchpay.gutouch.net/touchpayv2/script/touchpaynr/prod_touchpay-0.0.1.js type="text/javascript">
-    </script> --}}
+    <script src=https://touchpay.gutouch.net/touchpayv2/script/touchpaynr/prod_touchpay-0.0.1.js type="text/javascript">
+    </script>
     <script src="{{ asset('assets/js/map-single.js') }}"></script>
 
     
