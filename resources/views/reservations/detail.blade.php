@@ -1004,7 +1004,7 @@
                 );
             }
 
-            async function processPayment() {
+            window.processPayment = async function() {
                 Swal.fire({
                     title: 'Traitement du paiement...',
                     text: 'Veuillez patienter',
