@@ -758,7 +758,7 @@
             const dateLimit = @json($date_limit) || null;
             const dateLimitTotalStr = @json($dateLimitTotal) || null;
             const paymentStatus = @json($reservation->paiement->payment_status);
-            alert(paymentStatus);
+            // alert(paymentStatus);
             const reservationUuid = reservationData.uuid || null;
             let urlWaiting = "{{ route('reservation.paiement.waiting', ['reservation_uuid' => ':reservation_uuid']) }}";
             let urlFailed = "{{ route('reservation.paiement.failed', ['reservation_uuid' => ':reservation_uuid']) }}";
