@@ -19,6 +19,7 @@
                 $totalMinutes = $start->diffInMinutes($end);
                 $limit = $start->copy()->addMinutes($totalMinutes * 0.06);
                 $date_limit = $limit->format('d/m/Y à H\hi');
+                $dateLimitTotal = $limit->format('d/m/Y à H:i');
                 $now = now();
                 $date_reservation = \Carbon\Carbon::parse($reservation->created_at);
                 $isActive = $start <= $now && $end >= $now;
@@ -755,6 +756,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const reservationData = @json($reservation) || null;
             const dateLimit = @json($date_limit) || null;
+            const dateLimitTotalStr = @json($dateLimitTotal) || null;
             const reservationUuid = reservationData.uuid || null;
             let urlWaiting = "{{ route('reservation.paiement.waiting', ['reservation_uuid' => ':reservation_uuid']) }}";
             let urlFailed = "{{ route('reservation.paiement.failed', ['reservation_uuid' => ':reservation_uuid']) }}";
@@ -958,29 +960,6 @@
             // Initialiser le reçu
             generateReceipt();
 
-            // Notification personnalisée
-            function showNotification(message, type) {
-                const notification = document.createElement('div');
-                notification.className = `notification notification-${type}`;
-                notification.innerHTML = `
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
-                `;
-                
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.classList.add('show');
-                }, 10);
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => {
-                        document.body.removeChild(notification);
-                    }, 300);
-                }, 3000);
-            }
-
             // Fonction TouchPay
             reservationDataUpdated = {};
 
@@ -1088,6 +1067,31 @@
                     });
                 }
             }
+
+            // Notification personnalisée
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification notification-${type}`;
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 10);
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+
+            
             // Ajouter les styles pour les notifications
             const notificationStyle = document.createElement('style');
             notificationStyle.textContent = `
