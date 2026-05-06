@@ -50,41 +50,47 @@
                         </div>
                     </div>
                     <div class="status-badge-container">
-                        @switch($reservation->status)
-                            @case('confirmed')
-                                <span class="badge-status confirmed">
-                                    <i class="fas fa-check-circle me-1"></i> Confirmée
+                        @if ($reservation->paiement->payment_status === 'paid')
+                            @switch($reservation->status)
+                                @case('confirmed')
+                                    <span class="badge-status confirmed">
+                                        <i class="fas fa-check-circle me-1"></i> Réservation Confirmée
+                                    </span>
+                                    @break
+                                @case('pending')
+                                    <span class="badge-status pending">
+                                        <i class="fas fa-clock me-1"></i> En attente de confirmation
+                                    </span>
+                                    @break
+                                @case('cancelled')
+                                    <span class="badge-status cancelled">
+                                        <i class="fas fa-times-circle me-1"></i> Réservation Annulée
+                                    </span>
+                                    @break
+                                @case('completed')
+                                    <span class="badge-status completed">
+                                        <i class="fas fa-flag-checkered me-1"></i> Séjour Terminée
+                                    </span>
+                                    @break
+                                @case('reconducted')
+                                    <span class="badge-status reconducted">
+                                        <i class="fas fa-redo me-1"></i> Reconduite
+                                    </span>
+                                    @break
+                            @endswitch
+                            
+                            @if($isActive)
+                                <span class="badge-status active">
+                                    <i class="fas fa-play-circle me-1"></i> Séjour en cours {{ $limit->diffForHumans() }} 
                                 </span>
-                                @break
-                            @case('pending')
-                                <span class="badge-status pending">
-                                    <i class="fas fa-clock me-1"></i> En attente
+                            @elseif($isUpcoming)
+                                <span class="badge-status upcoming">
+                                    <i class="fas fa-clock me-1"></i> Séjour à venir dans {{ $daysUntilStay }} jours
                                 </span>
-                                @break
-                            @case('cancelled')
-                                <span class="badge-status cancelled">
-                                    <i class="fas fa-times-circle me-1"></i> Annulée
-                                </span>
-                                @break
-                            @case('completed')
-                                <span class="badge-status completed">
-                                    <i class="fas fa-flag-checkered me-1"></i> Terminée
-                                </span>
-                                @break
-                            @case('reconducted')
-                                <span class="badge-status reconducted">
-                                    <i class="fas fa-redo me-1"></i> Reconduite
-                                </span>
-                                @break
-                        @endswitch
-                        
-                        @if($isActive)
-                            <span class="badge-status active">
-                                <i class="fas fa-play-circle me-1"></i> En cours
-                            </span>
-                        @elseif($isUpcoming)
-                            <span class="badge-status upcoming">
-                                <i class="fas fa-clock me-1"></i> À venir
+                            @endif
+                        @else
+                            <span class="badge-status pending">
+                                <i class="fas fa-clock me-1"></i> En attente de paiement
                             </span>
                         @endif
                     </div>
@@ -160,7 +166,7 @@
                     </div>
 
                     <!-- Carte du reçu -->
-                    <div class="modern-card" id="receipt-card">
+                    <div class="modern-card {{ $reservation->paiement->payment_status === 'paid' ? '' : 'd-none' }}" id="receipt-card">
                         <div class="card-header-custom">
                             <h6 class="mb-0">
                                 <i class="fas fa-receipt me-2"></i>Reçu de paiement
@@ -192,15 +198,6 @@
                                     <i class="fas fa-times-circle me-2"></i>Annuler la réservation
                                 </button>
                             @endif
-                            {{-- @if($reservation->status === 'confirmed' && $isUpcoming)
-                                <button class="btn-action btn-cancel" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                                    <i class="fas fa-times-circle me-2"></i>Annuler la réservation
-                                </button>
-                            @endif --}}
-                            
-                            {{-- <button class="btn-action btn-secondary mt-2" onclick="window.print()">
-                                <i class="fas fa-print me-2"></i>Imprimer le reçu
-                            </button> --}}
                             
                             <a href="tel:+2250787245197" class="btn-action btn-secondary mt-2">
                                 <i class="fas fa-headset me-2"></i>Contacter le support
@@ -208,7 +205,7 @@
                             {{-- <a href="tel:+2250787245197" class="btn-action btn-support mt-2">
                                 <i class="fas fa-headset me-2"></i>Contacter le support
                             </a> --}}
-                            @if($reservation->status === 'confirmed' || $reservation->status === 'pending')
+                            @if(($reservation->status === 'confirmed' || $reservation->status === 'pending') && $reservation->paiement->payment_status === 'paid')
                                 <a href="{{ route('reservation.reconduction', $reservation->uuid) }}" class="btn-action btn-support mt-2">
                                     <i class="fas fa-redo me-1"></i>Reconduire la reservation
                                 </a>
@@ -217,7 +214,7 @@
                     </div>
 
                     <!-- Carte informations de paiement -->
-                    <div class="modern-card">
+                    <div class="modern-card {{ $reservation->paiement->payment_status === 'paid' ? '' : 'd-none' }}">
                         <div class="card-header-custom">
                             <h6 class="mb-0">
                                 <i class="fas fa-credit-card me-2"></i>Informations de paiement
@@ -269,8 +266,9 @@
                     </div>
                 </div>
             </div>
+
             <!-- Section carte interactive -->
-            <div class="modern-card mt-4">
+            <div class="modern-card mt-4 {{ $reservation->paiement->payment_status === 'paid' ? '' : 'd-none' }}">
                 <div class="card-header-custom">
                     <h6 class="mb-0">
                         <i class="fas fa-map-marked-alt me-2"></i>Itinéraire vers le logement
