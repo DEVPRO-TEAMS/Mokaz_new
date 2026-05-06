@@ -757,10 +757,11 @@
             const reservationData = @json($reservation) || null;
             const dateLimit = @json($date_limit) || null;
             const dateLimitTotalStr = @json($dateLimitTotal) || null;
+            const paymentStatus = @json($reservation->paiement->payment_status);
             const reservationUuid = reservationData.uuid || null;
             let urlWaiting = "{{ route('reservation.paiement.waiting', ['reservation_uuid' => ':reservation_uuid']) }}";
             let urlFailed = "{{ route('reservation.paiement.failed', ['reservation_uuid' => ':reservation_uuid']) }}";
-            let receiptDownloaded = false;
+            let receiptDownloaded = paymentStatus === 'paid' ? true : false;
             // let currentMapMode = 'driving';
             function formatDateFR(dateString) {
                 if (!dateString) return '';
