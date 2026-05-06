@@ -758,10 +758,11 @@
             const dateLimit = @json($date_limit) || null;
             const dateLimitTotalStr = @json($dateLimitTotal) || null;
             const paymentStatus = @json($reservation->paiement->payment_status);
+            alert(paymentStatus);
             const reservationUuid = reservationData.uuid || null;
             let urlWaiting = "{{ route('reservation.paiement.waiting', ['reservation_uuid' => ':reservation_uuid']) }}";
             let urlFailed = "{{ route('reservation.paiement.failed', ['reservation_uuid' => ':reservation_uuid']) }}";
-            let receiptDownloaded = paymentStatus === 'paid' ? true : false;
+            let receiptDownloaded = false;
             // let currentMapMode = 'driving';
             function formatDateFR(dateString) {
                 if (!dateString) return '';
@@ -1127,7 +1128,7 @@
 
             // Empêcher la fermeture si le reçu n'est pas téléchargé
             window.addEventListener('beforeunload', function(e) {
-                if (!receiptDownloaded && reservationData.status !== 'cancelled') {
+                if (!receiptDownloaded && reservationData.status !== 'cancelled' && paymentStatus === 'paid') {
                     e.preventDefault();
                     e.returnValue = "Veuillez télécharger votre reçu avant de quitter la page.";
                     return e.returnValue;
