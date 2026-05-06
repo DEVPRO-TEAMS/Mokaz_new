@@ -199,17 +199,21 @@
                                 </button>
                             @endif
                             
-                            <a href="tel:+2250787245197" class="btn-action btn-secondary mt-2">
-                                <i class="fas fa-headset me-2"></i>Contacter le support
-                            </a>
-                            {{-- <a href="tel:+2250787245197" class="btn-action btn-support mt-2">
-                                <i class="fas fa-headset me-2"></i>Contacter le support
-                            </a> --}}
+                            @if($reservation->paiement->payment_status !== 'paid')
+                                <a href="javascript:void(0);" type="button" onclick="processPayment()" class="btn-action btn-seccess-payment mt-2">
+                                    <i class="fas fa-credit-card me-2"></i>Payer maintenant
+                                </a>
+                            @endif
+
                             @if(($reservation->status === 'confirmed' || $reservation->status === 'pending') && $reservation->paiement->payment_status === 'paid')
                                 <a href="{{ route('reservation.reconduction', $reservation->uuid) }}" class="btn-action btn-support mt-2">
                                     <i class="fas fa-redo me-1"></i>Reconduire la reservation
                                 </a>
                             @endif
+
+                            <a href="tel:+2250787245197" class="btn-action btn-secondary mt-2">
+                                <i class="fas fa-headset me-2"></i>Contacter le support
+                            </a>
                         </div>
                     </div>
 
@@ -597,6 +601,10 @@
             background: #6c757d;
             color: white;
         }
+        .btn-seccess-payment {
+            background: #28a745;
+            color: white;
+        }
 
         .btn-support {
             background: #17a2b8;
@@ -748,6 +756,8 @@
             const reservationData = @json($reservation) || null;
             const dateLimit = @json($date_limit) || null;
             const reservationUuid = reservationData.uuid || null;
+            let urlWaiting = "{{ route('reservation.paiement.waiting', ['reservation_uuid' => ':reservation_uuid']) }}";
+            let urlFailed = "{{ route('reservation.paiement.failed', ['reservation_uuid' => ':reservation_uuid']) }}";
             let receiptDownloaded = false;
             // let currentMapMode = 'driving';
             function formatDateFR(dateString) {
@@ -945,20 +955,6 @@
                 }, 2000);
             }
 
-            // Gestionnaire pour les boutons de mode de transport
-            // document.querySelectorAll('.btn-transport').forEach(btn => {
-            //     btn.addEventListener('click', function() {
-            //         document.querySelectorAll('.btn-transport').forEach(b => b.classList.remove('active'));
-            //         this.classList.add('active');
-            //         currentMapMode = this.dataset.mode;
-            //         // Ici, ajouter la logique pour recalculer l'itinéraire avec le nouveau mode
-            //         updateMapWithMode(currentMapMode);
-            //     });
-            // });
-
-            // // Initialiser la carte
-            // initializeMap();
-
             // Initialiser le reçu
             generateReceipt();
 
@@ -985,6 +981,113 @@
                 }, 3000);
             }
 
+            // Fonction TouchPay
+            reservationDataUpdated = {};
+
+            function parseFrenchDate(dateStr) {
+                // Supprimer le " à "
+                const [datePart, timePart] = dateStr.split(' à ');
+                const [day, month, year] = datePart.split('/');
+                const [hour, minute] = timePart.split(':');
+
+                // Créer un objet Date au format ISO
+                return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
+            }
+
+
+            function calltouchpay() {
+                const order_number = reservationDataUpdated.reservation.code;
+                const agency_code = "JSBEY11380";
+                const secure_code = "UYnhBAw9f0A5DshXN8MKA6dg2VZSGs35VrXjETMZSGbJhGlhtw";
+                const domain_name = 'jsbeyci.com';
+                const url_redirection_success = urlWaiting.replace(':reservation_uuid', reservationUuid);
+                const url_redirection_failed = urlFailed.replace(':reservation_uuid', reservationUuid);
+                const amount = parseFloat(reservationDataUpdated.reservation.payment_amount);
+                const city = "";
+                const email = reservationDataUpdated.reservation.email || "";
+                const clientFirstname = reservationDataUpdated.reservation.prenoms || "";
+                const clientLastname = reservationDataUpdated.reservation.nom || "";
+                const clientPhone = reservationDataUpdated.reservation.phone || "";
+
+                sendPaymentInfos(
+                    order_number,
+                    agency_code,
+                    secure_code,
+                    domain_name,
+                    url_redirection_success,
+                    url_redirection_failed,
+                    amount,
+                    city,
+                    email,
+                    clientFirstname,
+                    clientLastname,
+                    clientPhone
+                );
+            }
+
+            async function processPayment() {
+                Swal.fire({
+                    title: 'Traitement du paiement...',
+                    text: 'Veuillez patienter',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                
+                const payload = {
+                    ...reservationData
+                };
+
+                try {
+                    const res = await fetch('/api/reservation/update-by-paiement/' + reservationUuid, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+
+                    if (!data.success) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: data.message,
+                        });
+                        return;
+                    }
+
+                    // Mise à jour de reservationData avec la réponse du backend
+                    // reservationData = data.data;
+                    reservationDataUpdated.reservation = data.reservation;
+                    // Récupérer la date actuelle
+                    const now = new Date();
+                    const dateLimit = parseFrenchDate(dateLimitTotalStr);
+                    // alert(now);
+                    // alert(dateLimit);
+                    if (now > dateLimit) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: 'Le paiement a expiré.',
+                        });
+                        return;
+                    }else{
+                        // Appel TouchPay avec les infos mises à jour
+                        calltouchpay();
+                    }
+                    
+
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur réseau',
+                        text: 'Impossible de traiter le paiement. Veuillez réessayer.'
+                    });
+                }
+            }
             // Ajouter les styles pour les notifications
             const notificationStyle = document.createElement('style');
             notificationStyle.textContent = `
